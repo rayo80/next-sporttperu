@@ -23,6 +23,7 @@ import { useCart } from "@/contexts/cart.context"
 import {use} from "react"
 
 import { useParams } from 'next/navigation'
+import { SiteFooter } from "@/components/site-footer"
 interface ColorOption {
   id: string
   label: string
@@ -267,6 +268,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           </div>
         </div>
       </main>
+      <SiteFooter />
     </>
   )
 }

@@ -23,6 +23,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useProducts } from "@/contexts/product.context"
+import { SiteFooter } from "@/components/site-footer"
 
 const sortOptions = [
   { label: "Destacados", value: "featured" },
@@ -185,6 +186,7 @@ export default function CollectionPage({ params }: { params: { slug: string } })
           </div>
         </div>
       </main>
+      <SiteFooter />
     </>
   )
 }

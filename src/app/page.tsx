@@ -4,9 +4,13 @@ import { SportsClothingSection } from "@/components/clothing-section"
 import { HeroSlider } from "@/components/hero-slider"
 import { ProductSlider } from "@/components/product-slider"
 import { PromoBanners } from "@/components/promo-banners"
+import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { Button } from "@/components/ui/button"
 import { useProducts } from "@/contexts/product.context"
 import { Product } from "@/types/product"
+import Link from "next/link"
+
 
 
 const sliderBreakpoints = {
@@ -29,28 +33,48 @@ export default function Home() {
     <>
       <SiteHeader />
       <HeroSlider />
-      <main className="container-full px-0 py-10 md:px-10">
-        <div className="flex gap-12 flex-wrap">
-          <div className="w-full md:w-[22%]">
+      <main className="container-full px-10 py-10">
+        <div className="flex gap-6 flex-wrap p-auto justify-center">
+          <div className="w-full md:w-[20%]">
             <CategoriesSidebar />
           </div>
-          <div className="w-full md:w-[78%]">
+          <div className="w-full md:w-[75%]">
             <ProductSlider products={products} breakpoints={sliderBreakpoints} />
           </div>
         </div>
         {/* Jebe Section */}
         <section className="py-12 ">
           <div className="container-full px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">
+            <h2 className="text-4xl font-bold text-center mb-8">
               <span className="font-normal">Jebe</span>{" "}
-              <span className="font-bold">Profesional</span>
+              <span className="font-bold">Butterfly</span>
             </h2>
             <ProductSlider products={products} breakpoints={sliderRowBreakpoints} />
+            <div className="flex justify-center">
+                <Button asChild variant="outline" className="rounded-full px-8">
+                    <Link href="/collections/gomas">Explora</Link>
+                </Button>
+            </div>
+          </div>
+        </section>
+        <section className="py-12 ">
+          <div className="container-full px-4">
+            <h2 className="text-4xl font-bold text-center mb-8">
+              <span className="font-normal">Maderas</span>{" "}
+              <span className="font-bold">Butterfly</span>
+            </h2>
+            <ProductSlider products={products} breakpoints={sliderRowBreakpoints} />
+            <div className="flex justify-center">
+                <Button asChild variant="outline" className="rounded-full px-8">
+                    <Link href="/collections/maderas">Explora</Link>
+                </Button>
+            </div>
           </div>
         </section>
         <PromoBanners />
-        <ProductSlider products={products} breakpoints={sliderBreakpoints} />
+        <SportsClothingSection />
       </main>
+      <SiteFooter />
     </>
   )
 }

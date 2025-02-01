@@ -25,15 +25,15 @@ export function PromoBanners() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
         {promos.map((promo, index) => (
           <Link key={index} href={promo.url} className=" rounded-sm block group relative overflow-hidden aspect-[4/4]">
-            <div className={`absolute  inset-0 bg-gradient-to-br ${promo.gradient} opacity-90`} />
+            {/* <div className={`absolute  inset-0 bg-gradient-to-br ${promo.gradient} opacity-90`} /> */}
 
             {/* Product Image */}
             <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
               <Image
                 src={promo.image || "/placeholder.svg"}
                 alt={`${index}`}
-                width={400}
-                height={300}
+                width={500}
+                height={400}
                 className="object-contain"
               />
             </div>

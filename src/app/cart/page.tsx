@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/contexts/cart.context"
+import { SiteFooter } from "@/components/site-footer"
 
 
 export default function CartPage() {
@@ -206,6 +207,7 @@ export default function CartPage() {
           </>
         )}
       </main>
+      <SiteFooter />
     </>
   )
 }
