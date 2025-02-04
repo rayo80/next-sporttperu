@@ -18,12 +18,13 @@ import {
 } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
 import { useProducts } from "@/contexts/product.context"
-import { Product } from "@/types/product"
+import { Product, ProductVariant } from "@/types/product"
 import { useCart } from "@/contexts/cart.context"
 import {use} from "react"
 
 import { useParams } from 'next/navigation'
 import { SiteFooter } from "@/components/site-footer"
+import { toast } from "sonner"
 interface ColorOption {
   id: string
   label: string
@@ -31,12 +32,21 @@ interface ColorOption {
   className: string
 }
 
+interface VariantAttributeGroup {
+  type: string
+  values: string[]
+  available: { [key: string]: boolean }
+}
+
+
 const colorOptions: ColorOption[] = [
   { id: "pink", label: "Rosa", value: "pink", className: "bg-pink-500" },
   { id: "black", label: "Negro", value: "black", className: "bg-gray-700" },
 ]
 
 const ProductPage = ({ params }: { params: { slug: string } }) => {
+  const [selectedAttributes, setSelectedAttributes] = useState<{ 
+    [key: string]: string }>({})
   const rparams = useParams<{slug: string }>()
   const { addItem } = useCart()
   const [selectedColor, setSelectedColor] = useState<string>("pink")
@@ -51,14 +61,65 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
     ? url
     : "/assets/image.png";
   
+  // Group variants by attribute type
+  const attributeGroups =
+    product?.variants.reduce((groups: { [key: string]: VariantAttributeGroup }, variant) => {
+      Object.entries(variant.attributes).forEach(([type, value]) => {
+        if (!groups[type]) {
+          groups[type] = {
+            type,
+            values: [],
+            available: {},
+          }
+        }
+        if (!groups[type].values.includes(value)) {
+          groups[type].values.push(value)
+        }
+        groups[type].available[value] = variant.inventoryQuantity > 0
+      })
+      return groups
+    }, {}) || {}
+
+  const handleAttributeSelect = (type: string, value: string) => {
+      setSelectedAttributes((prev) => ({
+        ...prev,
+        [type]: value,
+      }))
+    }
+
+  // Find the selected variant based on selected attributes
+  const findSelectedVariant = (): ProductVariant | undefined => {
+    if (!product) return undefined
+
+    return product.variants.find((variant) =>
+      Object.entries(selectedAttributes).every(([key, value]) => variant.attributes[key] === value),
+    )
+  }
+
+  const selectedVariant = findSelectedVariant()
+  const variantPrice = selectedVariant?.prices[0]?.price ? 
+    Number(selectedVariant.prices[0].price) : 0
+
+
   const incrementQuantity = () => {
-    setQuantity(prev => Math.min(prev + 1, 99))
+      if (selectedVariant && quantity < selectedVariant.inventoryQuantity) {
+        setQuantity((prev) => prev + 1)
+      }
   }
 
   const decrementQuantity = () => {
-    setQuantity(prev => Math.max(prev - 1, 1))
+    setQuantity((prev) => Math.max(prev - 1, 1))
   }
 
+
+  const handleAddToCart = () => {
+    if (product && selectedVariant) {
+      addItem(product, selectedVariant)
+      toast.success("Producto añadido al carrito")
+    } else {
+      toast.error("Por favor selecciona todas las opciones")
+    }
+  }
   return (
     <>
       <SiteHeader />
@@ -103,55 +164,67 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
             <div>
               <h1 className="text-3xl font-bold">{product?.title}</h1>
               <div className="mt-4">
-                <span className="text-3xl font-bold text-pink-500">S/. 285.00</span>
+                <span className="text-3xl font-bold text-pink-500">S/. {variantPrice.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              <p className="text-sm text-muted-foreground">
-                Disponible: {product?.inventoryQuantity} en stock
-              </p>
+            {selectedVariant && (
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-full",
+                    selectedVariant.inventoryQuantity > 0 ? "bg-green-500" : "bg-red-500",
+                  )}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {selectedVariant.inventoryQuantity > 0 ? `${selectedVariant.inventoryQuantity} en stock` : "Agotado"}
+                </p>
+              </div>
+            )}
+
+            <p className="text-muted-foreground text-sm">{product?.description.slice(0, 400) + "..." || 
+            "Descripción del producto no disponible."}</p>
+
+            <ul>
+              <li className="flex items-center border">
+                <span className="font-semibold  text-center text-xs w-1/4 border py-2">Distribuidor:</span>
+                <span className="text-sm w-3/4 text-center">
+                  <a href="/" title="Distribuidor" className="hover:underline">{product?.vendor}</a>
+                </span>
+              </li>
+            </ul>
+            {/* Variant Selectors */}
+            <div className="space-y-6">
+              {Object.entries(attributeGroups).map(([type, group]) => (
+                <div key={type} className="space-y-2">
+                  <Label className="text-base">{type}:</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {group.values.map((value) => {
+                      const isSelected = selectedAttributes[type] === value
+                      const isAvailable = group.available[value]
+
+                      return (
+                        <Button
+                          key={value}
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "h-9 px-4",
+                            isSelected && "border-pink-500 bg-pink-50 text-pink-500",
+                            !isAvailable && "opacity-50 cursor-not-allowed line-through",
+                          )}
+                          onClick={() => isAvailable && handleAttributeSelect(type, value)}
+                          disabled={!isAvailable}
+                        >
+                          {value}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <p className="text-muted-foreground">
-              {product?.description}
-            </p>
-
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-4">
-                <span className="font-medium">Distribuidor:</span>
-                <span>Sportt</span>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Color:</Label>
-                <RadioGroup
-                  value={selectedColor}
-                  onValueChange={setSelectedColor}
-                  className="flex gap-2"
-                >
-                  {colorOptions.map((option) => (
-                    <Label
-                      key={option.id}
-                      htmlFor={option.id}
-                      className="cursor-pointer"
-                    >
-                      <RadioGroupItem
-                        id={option.id}
-                        value={option.value}
-                        className="peer sr-only"
-                      />
-                      <div className={cn(
-                        "h-8 w-8 rounded-full border-2 border-transparent ring-offset-background transition-all hover:scale-110",
-                        option.className,
-                        "peer-data-[state=checked]:border-white peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-pink-500"
-                      )} />
-                      <span className="sr-only">{option.label}</span>
-                    </Label>
-                  ))}
-                </RadioGroup>
-              </div>
 
               <div className="flex items-center gap-4">
                 <div className="flex items-center border rounded-md">
@@ -169,18 +242,20 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                     size="icon"
                     className="rounded-none"
                     onClick={incrementQuantity}
+                    disabled={!selectedVariant || quantity >= selectedVariant.inventoryQuantity}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
 
-                <Button 
-                  className="flex-1 bg-zinc-900 hover:bg-zinc-800" 
-                  onClick={()=>addItem(product)}>
+                <Button
+                  className="flex-1 bg-zinc-900 hover:bg-zinc-800"
+                  onClick={handleAddToCart}
+                  disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
+                >
                   AÑADIR A CARRITO
                 </Button>
               </div>
-
               <Button className="w-full bg-pink-500 hover:bg-pink-600">
                 Comprar ahora
               </Button>
@@ -235,28 +310,28 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                 </p>
                 <div className="flex gap-2">
                   <Image
-                    src="/placeholder.svg"
+                    src="/assets/amazon.svg"
                     alt="Amazon"
                     width={40}
                     height={24}
                     className="h-6 w-auto"
                   />
                   <Image
-                    src="/placeholder.svg"
-                    alt="American Express"
+                    src="/assets/bitcoin.svg"
+                    alt="Bitcoin"
                     width={40}
                     height={24}
                     className="h-6 w-auto"
                   />
                   <Image
-                    src="/placeholder.svg"
+                    src="/assets/paypal.svg"
                     alt="PayPal"
                     width={40}
                     height={24}
                     className="h-6 w-auto"
                   />
                   <Image
-                    src="/placeholder.svg"
+                    src="/assets/visa.svg"
                     alt="Visa"
                     width={40}
                     height={24}

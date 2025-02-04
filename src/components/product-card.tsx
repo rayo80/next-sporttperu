@@ -100,7 +100,7 @@ export function ProductCard({
           </div>
         </div>
         <div className="p-4 w-full">
-          <h5 className="text-lg">{title}</h5>
+          <h5 className="text-sm">{title}</h5>
           <div className="flex items-baseline gap-2 mt-1">
             {price && (
               <span className="text-sm text-muted-foreground line-through">

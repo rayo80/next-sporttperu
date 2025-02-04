@@ -2,8 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Futura, sans-serif;
+
+@font-face {
+  font-family: 'Futura';
+  src: url('/fonts/futura.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body, h1 {
+  font-family: Futura;
 }
 
 @layer utilities {

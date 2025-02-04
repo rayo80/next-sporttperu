@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Truck, Store } from 'lucide-react'
@@ -11,37 +11,127 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useCart } from "@/contexts/cart.context"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
 
 
 export default function CheckoutPage() {
+
+  interface FormErrors {
+    email?: string
+    lastName?: string
+    address?: string
+    city?: string
+    region?: string
+  }
+
+  
   const router = useRouter()
-  const { items, total } = useCart()
+  const { items, total, clearCart } = useCart()
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const tax = total * 0.18 // 18% IGV
+  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
   const [formData, setFormData] = useState({
     email: "",
-    firstName: "",
     lastName: "",
     address: "",
-    apartment: "",
+    city: "",
+    region: "",
     newsletter: false,
   })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+  const validateField = useCallback(
+    (name: string, value: string): string | undefined => {
+      switch (name) {
+        case "email":
+          return !value || !value.includes("@") ? "Email inválido" : undefined
+        case "lastName":
+          return !value ? "Apellidos es requerido" : undefined
+        case "address":
+          return deliveryMethod === "shipping" && !value ? "Dirección es requerida" : undefined
+        case "city":
+          return deliveryMethod === "shipping" && !value ? "Ciudad es requerida" : undefined
+        case "region":
+          return deliveryMethod === "shipping" && !value ? "Región es requerida" : undefined
+        default:
+          return undefined
+      }
+    },
+    [deliveryMethod],
+  )
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target
+      setFormData((prev) => ({ ...prev, [name]: value }))
+      const error = validateField(name, value)
+      setFormErrors((prev) => ({ ...prev, [name]: error }))
+    },
+    [validateField],
+  )
+
+  const handleSelectChange = useCallback(
+    (name: string, value: string) => {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+      const error = validateField(name, value)
+      setFormErrors((prev) => ({ ...prev, [name]: error }))
+    },
+    [validateField],
+  )
+
+  const handleCheckboxChange = useCallback((checked: boolean) => {
+    setFormData((prev) => ({ ...prev, newsletter: checked }))
+  }, [])
+
+  const validateForm = useCallback((): boolean => {
+    const errors: FormErrors = {}
+    let isValid = true
+
+    Object.entries(formData).forEach(([key, value]) => {
+      const error = validateField(key, value)
+      if (error) {
+        errors[key as keyof FormErrors] = error
+        isValid = false
+      }
+    })
+
+    setFormErrors(errors)
+    return isValid
+  }, [formData, validateField])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    if (!validateForm()) {
+      setIsSubmitting(false)
+      toast.error("Por favor, complete todos los campos requeridos")
+      return
+    }
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Simulate successful payment
+      clearCart()
+      toast.success("¡Pago realizado con éxito!")
+      router.push("/success") // You would need to create a success page
+    } catch (error) {
+      toast.error("Error al procesar el pago. Por favor, intente nuevamente.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const taxAmount = total * 0.18 // 18% IGV
-  
   return (
     <>
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid md:grid-cols-[1fr_400px] gap-8">
           {/* Left Column - Form */}
-          <div className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Contact Section */}
             <section>
               <h2 className="text-2xl font-bold mb-4">Contacto</h2>
@@ -56,12 +146,11 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox
+                <Checkbox
                     id="newsletter"
+                    name="newsletter"
                     checked={formData.newsletter}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, newsletter: checked as boolean }))
-                    }
+                    onCheckedChange={handleCheckboxChange}
                   />
                   <label
                     htmlFor="newsletter"
@@ -150,10 +239,42 @@ export default function CheckoutPage() {
                       onChange={handleInputChange}
                     />
                   </div>
+                  
+                <div className="grid grid-cols-6 gap-4">
+                  <div className="col-span-2">
+                    <Label htmlFor="city">Ciudad</Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      type="text"
+                      required
+                      className={formErrors.city ? "border-red-500" : ""}
+                    />
+                    {formErrors.city && <p className="text-sm text-red-500 mt-1">{formErrors.city}</p>}
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="region">Región</Label>
+                    <Select name="region">
+                      <SelectTrigger className={formErrors.region ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Seleccionar región" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lima">Lima</SelectItem>
+                        <SelectItem value="arequipa">Arequipa</SelectItem>
+                        <SelectItem value="cusco">Cusco</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formErrors.region && <p className="text-sm text-red-500 mt-1">{formErrors.region}</p>}
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="postalCode">Código postal (opcional)</Label>
+                    <Input id="postalCode" name="postalCode" type="text" />
+                  </div>
+                </div>
                 </div>
               )}
             </section>
-          </div>
+          </form>
 
           {/* Right Column - Cart Summary */}
           <div className="bg-gray-50 p-6 rounded-lg space-y-6">
@@ -203,11 +324,11 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>IGV</span>
-                <span>S/ {taxAmount.toFixed(2)}</span>
+                <span>S/ {tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-medium text-lg">
                 <span>Total</span>
-                <span>S/ {(total + taxAmount).toFixed(2)}</span>
+                <span>S/ {(total + tax).toFixed(2)}</span>
               </div>
             </div>
 
