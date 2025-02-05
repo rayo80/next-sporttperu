@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Facebook, Twitter, Share2, Ruler, Truck, HelpCircle, Minus, Plus, Heart, RefreshCw } from 'lucide-react'
+import { Facebook, Twitter, Share2, Ruler, Truck, HelpCircle, Minus, Plus, Heart, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -52,15 +52,70 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   const [selectedColor, setSelectedColor] = useState<string>("pink")
   const [quantity, setQuantity] = useState(1)
   const { getProductSlug } = useProducts()
+
+  // Image selector
+  const thumbnailsRef = useRef<HTMLDivElement>(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+
   // params = React.use(params)
   console.log('rparams', rparams)
+
   const product = getProductSlug(rparams.slug)
   const imageUrls = product?.imageUrls
-  const url = `${process.env.BASE_IMAGE_URL}/uploads/${imageUrls[0]}`;
+
+  const generate_url = (url: string) => {
+    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  }
+
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? url
+    ? generate_url(imageUrls[0])
     : "/assets/image.png";
+  const productImages = product?.imageUrls.length ? product.imageUrls : ["/placeholdes.svg"]
+
+  const nextImage = () => {
+    setSelectedImageIndex((prev) => (prev + 1) % productImages.length)
+  }
   
+  const prevImage = () => {
+    setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length)
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setStartX(e.pageX - (thumbnailsRef.current?.offsetLeft || 0))
+    setScrollLeft(thumbnailsRef.current?.scrollLeft || 0)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
+    e.preventDefault()
+    if (!thumbnailsRef.current) return
+    const x = e.pageX - (thumbnailsRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 2
+    thumbnailsRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handleMouseLeave = () => {
+    setIsDragging(false)
+  }
+
+
+  const scrollThumbnails = (direction: "left" | "right") => {
+    if (!thumbnailsRef.current) return
+    const scrollAmount = 200
+    thumbnailsRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    })
+  }
+
   // Group variants by attribute type
   const attributeGroups =
     product?.variants.reduce((groups: { [key: string]: VariantAttributeGroup }, variant) => {
@@ -151,12 +206,85 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           <div className="space-y-4">
             <div className="aspect-square relative border rounded-lg overflow-hidden">
               <Image
-                src={validUrl}
+                src={generate_url(productImages[selectedImageIndex])}
                 alt="Tenergy 05 FX"
                 fill
                 className="object-contain"
               />
+              {/* Main Image Navigation */}
+                <div className="absolute inset-0 flex items-center justify-between p-4">
+                  <Button variant="outline" size="icon" onClick={prevImage} 
+                    className="bg-white/80 hover:bg-white">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={nextImage} 
+                    className="bg-white/80 hover:bg-white">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
             </div>
+            {productImages.length > 0 && (
+              <div className="relative">
+                {/* Thumbnail Navigation */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollThumbnails("left")}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollThumbnails("right")}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                {/* Thumbnails Slider */}
+                <div
+                  ref={thumbnailsRef}
+                  className="flex gap-2 overflow-x-auto scrollbar-hide mx-10"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ scrollBehavior: isDragging ? "auto" : "smooth" }}
+                >
+                  {productImages.map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={cn(
+                        "relative flex-shrink-0 w-20 aspect-square border rounded-md overflow-hidden bg-white",
+                        selectedImageIndex === index && "ring-2 ring-pink-500",
+                      )}
+                    >
+                      <Image
+                        src={generate_url(productImages[selectedImageIndex])}
+                        alt={`${product?.name} - Vista ${index + 1}`}
+                        fill
+                        className="object-contain p-1"
+                      />
+                    </button>
+                  ))}
+                </div>
+                {/* Pagination Dots */}
+                <div className="flex justify-center gap-1 mt-4">
+                  {productImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={cn(
+                        "w-2 h-2 rounded-full transition-colors",
+                        selectedImageIndex === index ? "bg-pink-500" : "bg-gray-300",
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
