@@ -1,5 +1,5 @@
 import axios from "axios"
-import type { User, LoginCredentials } from "@/types/user"
+import type { Customer, CreateCustomerDto } from "@/types/customer"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://sporttnest.emetstudio.com"
 const TOKEN =
@@ -13,8 +13,13 @@ const api = axios.create({
   },
 })
 
+interface LoginCredentials {
+  email: string
+  password: string
+}
+
 export const authService = {
-  login: async (credentials: LoginCredentials): Promise<User> => {
+  login: async (credentials: LoginCredentials): Promise<Customer> => {
     try {
       const response = await api.post("/auth/login", credentials)
       return response.data
@@ -26,7 +31,7 @@ export const authService = {
     }
   },
 
-  register: async (userData: Omit<User, "id"> & { password: string }): Promise<User> => {
+  register: async (userData: CreateCustomerDto & { password: string }): Promise<Customer> => {
     try {
       const response = await api.post("/auth/register", userData)
       return response.data
@@ -49,7 +54,7 @@ export const authService = {
     }
   },
 
-  getCurrentUser: async (): Promise<User | null> => {
+  getCurrentUser: async (): Promise<Customer | null> => {
     try {
       const response = await api.get("/auth/me")
       return response.data

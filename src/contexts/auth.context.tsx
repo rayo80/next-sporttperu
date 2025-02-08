@@ -3,28 +3,34 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { authService } from "@/api/auth"
-import type { User, LoginCredentials } from "@/types/user"
+import { CreateCustomerDto, Customer } from "@/types/customer"
+
+
+interface LoginCredentials {
+  email: string
+  password: string
+}
 
 interface AuthContextType {
-  user: User | null
+  customer: Customer | null
   isLoading: boolean
   error: string | null
   login: (credentials: LoginCredentials) => Promise<void>
-  register: (userData: Omit<User, "id"> & { password: string }) => Promise<void>
+  register: (userData: CreateCustomerDto & { password: string }) => Promise<void>
   logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [customer, setCustomer] = useState<Customer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     authService
       .getCurrentUser()
-      .then(setUser)
+      .then(setCustomer)
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false))
   }, [])
@@ -33,8 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true)
     setError(null)
     try {
-      const user = await authService.login(credentials)
-      setUser(user)
+      const customer = await authService.login(credentials)
+      setCustomer(customer)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during login")
       throw err
@@ -43,12 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const register = async (userData: Omit<User, "id"> & { password: string }) => {
+  const register = async (userData: CreateCustomerDto & { password: string }) => {
     setIsLoading(true)
     setError(null)
     try {
-      const user = await authService.register(userData)
-      setUser(user)
+      const customer = await authService.register(userData)
+      setCustomer(customer)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during registration")
       throw err
@@ -62,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null)
     try {
       await authService.logout()
-      setUser(null)
+      setCustomer(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during logout")
       throw err
@@ -74,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
+        customer,
         isLoading,
         error,
         login,
