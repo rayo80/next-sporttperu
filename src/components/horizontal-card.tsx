@@ -28,9 +28,13 @@ export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
     }
   }
 
-  const url = `${process.env.BASE_IMAGE_URL}/uploads/${imageUrls[0]}`;
+  const generate_url = (url: string) => {
+    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  }
+
+
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? url
+    ? generate_url(imageUrls[0])
     : "/assets/image.png";
 
   return (

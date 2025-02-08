@@ -1,7 +1,7 @@
 "use client"
 import Image from "next/image"
 import Link from "next/link"
-import { ShoppingCart, User } from 'lucide-react'
+import { LogOut, ShoppingCart, User } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -16,13 +16,25 @@ import { useState } from "react"
 import { useCart } from "@/contexts/cart.context"
 import { CartDrawer } from "./cart-drawer"
 import { useCategories } from "@/contexts/categories.context"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { useAuth } from "@/contexts/auth.context"
 
 
 export function SiteHeader() {
   const {items: shopCategories} = useCategories()
   const [cartOpen, setCartOpen] = useState(false)
+  const { customer, logout } = useAuth()
   const { items } = useCart()
   const itemCount = items.reduce((total, item) => total + item.quantity, 0)
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error("Error logging out:", error)
+    }
+  }
+  
   return (
     <header className="w-full bg-black text-white">
       <div className="container-full flex h-14 items-center justify-between px-10">
@@ -69,10 +81,48 @@ export function SiteHeader() {
                 )}
             </Button>
           </div>
-          <Button variant="ghost" size="icon" className="text-white hover:text-pink-500">
-            <User className="h-5 w-5" />
-            <span className="sr-only">Account</span>
-          </Button>
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white hover:text-pink-500">
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Account</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {customer ? (
+                  <>
+                    <DropdownMenuItem className="text-muted-foreground" disabled>
+                      {customer.email}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/account">Mi cuenta</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/orders">Mis pedidos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Cerrar sesión
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/login" className="text-pink-500 font-medium">
+                        Ingresar
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/register">Crear Cuenta</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </div>
 
