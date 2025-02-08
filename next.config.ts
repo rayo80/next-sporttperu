@@ -3,7 +3,16 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ['sporttnest.emetstudio.com', 'cdn.shopify.com'], // Agrega los dominios permitidos
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'sporttnest.emetstudio.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
+      },
+    ],
   },
   env: {
     BASE_IMAGE_URL: 'https://sporttnest.emetstudio.com',

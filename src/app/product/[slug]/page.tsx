@@ -70,9 +70,15 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
     return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
   }
 
+  const defaultImage = (imageUrls: string[]) => {
+    return imageUrls && imageUrls.length > 0 && imageUrls[0]
+    ? generate_url(imageUrls[0])
+    : "/assets/image.png";
+  }
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
     ? generate_url(imageUrls[0])
     : "/assets/image.png";
+    
   const productImages = product?.imageUrls.length ? product.imageUrls : ["/placeholdes.svg"]
 
   const nextImage = () => {

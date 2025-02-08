@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/contexts/cart.context"
 import { SiteFooter } from "@/components/site-footer"
+import { ProductVariant, VariantPriceModel } from "@/types/product"
 
 
 export default function CartPage() {
@@ -28,6 +29,9 @@ export default function CartPage() {
     }
   }
 
+  function getPricesAsModels(variant: ProductVariant): VariantPriceModel[] {
+    return variant.prices.map((p) => VariantPriceModel.fromInterface(p));
+  }
   
   const validUrl = (imagePath: any) => {
     return imagePath ? `${process.env.BASE_IMAGE_URL}/uploads/${imagePath}` : '/default-image.png';
@@ -67,11 +71,12 @@ export default function CartPage() {
                 </thead>
                 <tbody className="divide-y">
                   {items.map((item) => {
-                    const price = item.product.prices[0]?.price || 0
+                    const priceModels = getPricesAsModels(item.variant);
+                    const price = priceModels[0]?.priceAsNumber || 0;
                     const itemTotal = price * item.quantity
 
                     return (
-                      <tr key={item.product.slug} className="bg-white">
+                      <tr key={item.variant.id} className="bg-white">
                         <td className="p-4">
                           <div className="w-24 h-24 relative">
                             <Image

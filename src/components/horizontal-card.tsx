@@ -14,8 +14,7 @@ interface HorizontalProductCardProps {
 
 export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
   const { addItem } = useCart()
-  const { title, slug, imageUrls, inventoryQuantity, prices, variants } = product
-  const mainPrice = prices.find((p) => p.currencyId === "PEN")
+  const { title, slug, imageUrls, inventoryQuantity, variants } = product
   const defaultVariant = variants[0]
   const price = defaultVariant?.prices[0]?.price ? Number.parseFloat(defaultVariant.prices[0].price) : 0
 

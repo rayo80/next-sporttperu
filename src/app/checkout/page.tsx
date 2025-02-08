@@ -13,6 +13,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useCart } from "@/contexts/cart.context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import { useAddress } from "@/contexts/address.context"
+import { Address } from "@/types/address"
+import { useAuth } from "@/contexts/auth.context"
+import { CartItemModel } from "@/types/cart"
 
 
 export default function CheckoutPage() {
@@ -25,9 +29,21 @@ export default function CheckoutPage() {
     region?: string
   }
 
-  
+  const generate_url = (url: string) => {
+    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  }
+
+  const defaultImage = (imageUrls: string[]) => {
+    return imageUrls && imageUrls.length > 0 && imageUrls[0]
+    ? generate_url(imageUrls[0])
+    : "/assets/image.png";
+  }
+
   const router = useRouter()
   const { items, total, clearCart } = useCart()
+  const itemModels = items.map((i) => new CartItemModel(i));
+  const { user, isLoading: isAuthLoading } = useAuth()
+  const { addresses, createAddress, getAddresses, updateAddress, isLoading: isAddressLoading } = useAddress()
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
@@ -35,10 +51,16 @@ export default function CheckoutPage() {
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
   const [formData, setFormData] = useState({
     email: "",
+    firstName: "",
     lastName: "",
     address: "",
+    apartment: "",
     city: "",
     region: "",
+    postalCode: "",
+    phone: "",
+    notes: "",
+    deliveryDate: "",
     newsletter: false,
   })
 
@@ -113,8 +135,53 @@ export default function CheckoutPage() {
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // await new Promise((resolve) => setTimeout(resolve, 2000))
+      let shippingAddress: Address
 
+      if (user) {
+        // For logged-in users
+        if (addresses.length > 0) {
+          // Update existing address
+          shippingAddress = await updateAddress(addresses[0].id, {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            address1: formData.address,
+            address2: formData.apartment,
+            city: formData.city,
+            state: formData.region,
+            postalCode: formData.postalCode,
+            country: "PE",
+            phone: formData.phone,
+          })
+        } else {
+          // Create new address
+          shippingAddress = await createAddress({
+            customerId: user.id,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            address1: formData.address,
+            address2: formData.apartment,
+            city: formData.city,
+            state: formData.region,
+            postalCode: formData.postalCode,
+            country: "PE",
+            phone: formData.phone,
+          })
+        }
+      } else {
+        // For guest users
+        shippingAddress = await createAddress({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address1: formData.address,
+          address2: formData.apartment,
+          city: formData.city,
+          state: formData.region,
+          postalCode: formData.postalCode,
+          country: "PE",
+          phone: formData.phone,
+        })
+      }
       // Simulate successful payment
       clearCart()
       toast.success("¡Pago realizado con éxito!")
@@ -279,14 +346,14 @@ export default function CheckoutPage() {
           {/* Right Column - Cart Summary */}
           <div className="bg-gray-50 p-6 rounded-lg space-y-6">
             <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.product.slug} className="flex gap-4">
+              {itemModels.map((item) => (
+                <div key={item.variant.id} className="flex gap-4">
                   <div className="relative w-20 h-20 bg-white rounded-lg border overflow-hidden">
                     <div className="absolute top-0 right-0 bg-gray-500 text-white w-5 h-5 flex items-center justify-center rounded-bl-lg text-xs">
                       {item.quantity}
                     </div>
                     <Image
-                      src={"/placeholder.svg"}
+                      src={defaultImage(item.product?.imageUrls)}
                       alt={item.product.title}
                       fill
                       className="object-contain p-2"
@@ -299,7 +366,7 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                   <div className="font-medium">
-                    S/ {(item.product.prices[0]?.price * item.quantity).toFixed(2)}
+                    S/ {(item.variant.prices[0]?.priceAsNumber * item.quantity).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -341,3 +408,4 @@ export default function CheckoutPage() {
     </>
   )
 }
+

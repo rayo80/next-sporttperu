@@ -3,6 +3,9 @@ import '@/app/globals.css';
 import { CartProvider } from "@/contexts/cart.context";
 import { CategoryProvider } from "@/contexts/categories.context";
 import { SiteFooter } from "@/components/site-footer";
+import { OrderProvider } from "@/contexts/order.context";
+import { AuthProvider } from "@/contexts/auth.context";
+import { AddressProvider } from "@/contexts/address.context";
 
 export default function RootLayout({
   children,
@@ -12,11 +15,17 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="w-full container-full ">
-        
+
         <ProductProvider>
           <CartProvider>
             <CategoryProvider>
-              {children}
+              <AuthProvider>
+                <AddressProvider>
+                  <OrderProvider>
+                  {children}
+                  </OrderProvider>
+                </AddressProvider>
+              </AuthProvider>
             </CategoryProvider>
           </CartProvider>
         </ProductProvider>
