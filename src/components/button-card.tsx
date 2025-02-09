@@ -26,7 +26,7 @@ export function ButtonCard({ item, action}: ButtonCardProps) {
             "h-10 w-10 rounded-full bg-white shadow-md hover:bg-gray-100",
             "opacity-0 translate-x-4 transition-all duration-300",
             "group-hover:opacity-100 group-hover:translate-x-0",
-            `group-hover:transition-all group-hover:delay-[${100}ms]`
+            `group-hover:transition-all group-hover:delay-100`
             )}
             onClick={(e) => {
                 e.preventDefault()

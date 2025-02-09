@@ -17,21 +17,24 @@ import { useAddress } from "@/contexts/address.context"
 import { Address } from "@/types/address"
 import { useAuth } from "@/contexts/auth.context"
 import { CartItemModel } from "@/types/cart"
+import Link from "next/link"
+import { CreateCustomerDto } from "@/types/customer"
+import { useOrder } from "@/contexts/order.context"
+
+interface FormErrors {
+  email?: string
+  lastName?: string
+  address?: string
+  city?: string
+  region?: string
+}
+
+const generate_url = (url: string) => {
+  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+}
 
 
 export default function CheckoutPage() {
-
-  interface FormErrors {
-    email?: string
-    lastName?: string
-    address?: string
-    city?: string
-    region?: string
-  }
-
-  const generate_url = (url: string) => {
-    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
-  }
 
   const defaultImage = (imageUrls: string[]) => {
     return imageUrls && imageUrls.length > 0 && imageUrls[0]
@@ -41,27 +44,36 @@ export default function CheckoutPage() {
 
   const router = useRouter()
   const { items, total, clearCart } = useCart()
+  const { createOrderFromCart } = useOrder()
   const itemModels = items.map((i) => new CartItemModel(i));
-  const { user, isLoading: isAuthLoading } = useAuth()
+  const { customer, isLoading: isAuthLoading } = useAuth()
   const { addresses, createAddress, getAddresses, updateAddress, isLoading: isAddressLoading } = useAddress()
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const tax = total * 0.18 // 18% IGV
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
-  const [formData, setFormData] = useState({
-    email: "",
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const [formData, setFormData] = useState<CreateCustomerDto>({
     firstName: "",
     lastName: "",
-    address: "",
-    apartment: "",
-    city: "",
-    region: "",
-    postalCode: "",
     phone: "",
-    notes: "",
-    deliveryDate: "",
-    newsletter: false,
+    email: "",
+    acceptsMarketing: false,
+    addresses: [
+      {
+        company: "",
+        address1: "",
+        address2: "",
+        city: "",
+        province: "",
+        zip: "",
+        country: "PE",
+        phone: "",
+      },
+    ],
+    customerNotes: "",
+    preferredDeliveryDate: "",
   })
 
   const validateField = useCallback(
@@ -134,63 +146,20 @@ export default function CheckoutPage() {
     }
 
     try {
-      // Simulate API call
-      // await new Promise((resolve) => setTimeout(resolve, 2000))
-      let shippingAddress: Address
+      const order = await createOrderFromCart({ items, total }, formData)
 
-      if (user) {
-        // For logged-in users
-        if (addresses.length > 0) {
-          // Update existing address
-          shippingAddress = await updateAddress(addresses[0].id, {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            address1: formData.address,
-            address2: formData.apartment,
-            city: formData.city,
-            state: formData.region,
-            postalCode: formData.postalCode,
-            country: "PE",
-            phone: formData.phone,
-          })
-        } else {
-          // Create new address
-          shippingAddress = await createAddress({
-            customerId: user.id,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            address1: formData.address,
-            address2: formData.apartment,
-            city: formData.city,
-            state: formData.region,
-            postalCode: formData.postalCode,
-            country: "PE",
-            phone: formData.phone,
-          })
-        }
-      } else {
-        // For guest users
-        shippingAddress = await createAddress({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          address1: formData.address,
-          address2: formData.apartment,
-          city: formData.city,
-          state: formData.region,
-          postalCode: formData.postalCode,
-          country: "PE",
-          phone: formData.phone,
-        })
-      }
-      // Simulate successful payment
+      toast.success("¡Orden creada con éxito!")
       clearCart()
-      toast.success("¡Pago realizado con éxito!")
-      router.push("/success") // You would need to create a success page
+      router.push(`/order-confirmation/${order.id}`)
     } catch (error) {
-      toast.error("Error al procesar el pago. Por favor, intente nuevamente.")
+      toast.error(error instanceof Error ? error.message : "Failed to create order")
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isAuthLoading) {
+    return <div>Loading...</div>
   }
 
   return (
@@ -201,30 +170,44 @@ export default function CheckoutPage() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Contact Section */}
             <section>
-              <h2 className="text-2xl font-bold mb-4">Contacto</h2>
-              <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Contacto</h2>
+                {!customer && (
+                  <div className="text-sm">
+                    ¿Ya tienes una cuenta?{" "}
+                    <Link href="/login" className="text-pink-500 hover:text-pink-600">
+                      Iniciar sesión
+                    </Link>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-3">
                 <div>
                   <Input
+                    type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Email o número de teléfono móvil"
-                    className="w-full"
+                    placeholder="Email"
+                    className={`w-full ${formErrors.email ? "border-red-500" : ""}`}
+                    required
+                    disabled={!!customer}
                   />
+                  {formErrors.email && <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>}
                 </div>
                 <div className="flex items-center space-x-2">
-                <Checkbox
-                    id="newsletter"
-                    name="newsletter"
-                    checked={formData.newsletter}
-                    onCheckedChange={handleCheckboxChange}
-                  />
-                  <label
-                    htmlFor="newsletter"
-                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Enviarme novedades y ofertas por correo electrónico
-                  </label>
+                  <Checkbox
+                      id="newsletter"
+                      name="newsletter"
+                      checked={formData.newsletter}
+                      onCheckedChange={handleCheckboxChange}
+                    />
+                    <label
+                      htmlFor="newsletter"
+                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Enviarme novedades y ofertas por correo electrónico
+                    </label>
                 </div>
               </div>
             </section>
@@ -408,4 +391,5 @@ export default function CheckoutPage() {
     </>
   )
 }
+
 

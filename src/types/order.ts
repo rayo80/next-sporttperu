@@ -8,8 +8,8 @@ export interface Order {
     totalTax: number; // Total de impuestos aplicados
     totalDiscounts: number; // Total de descuentos aplicados
     lineItems: OrderItem[]; // Lista de productos en el pedido
-    shippingAddressId: string; // ID de la dirección de envío
-    billingAddressId: string; // ID de la dirección de facturación
+    shippingAddressId?: string; // ID de la dirección de envío
+    billingAddressId?: string; // ID de la dirección de facturación
     couponId?: string; // ID del cupón aplicado (opcional)
     paymentProviderId: string; // ID del proveedor de pago
     shippingMethodId: string; // ID del método de envío

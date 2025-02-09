@@ -1,28 +1,20 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback } from "react"
-import type { Order, CreateOrderDto, OrderError, OrderAddress } from "@/types/order"
+import type { Order, CreateOrderDto, OrderError } from "@/types/order"
 import type { CartState } from "@/types/cart"
-
-
-import { orderService } from "@/api/order"
+import type { Customer, CreateCustomerDto } from "@/types/customer"
+import { customerService } from "@/api/customers"
 import { useCart } from "./cart.context"
+import { useAuth } from "./auth.context"
+import { orderService } from "@/api/order"
+
 
 interface OrderContextType {
   currentOrder: Order | null
   isLoading: boolean
   error: OrderError | null
-  createOrderFromCart: (
-    cartState: CartState,
-    customerInfo: {
-      email: string
-      phone: string
-      shippingAddress: OrderAddress
-      billingAddress?: OrderAddress
-      customerNotes?: string
-      preferredDeliveryDate?: string
-    },
-  ) => Promise<Order>
+  createOrderFromCart: (cartState: CartState, customerInfo: CreateCustomerDto) => Promise<Order>
   clearOrder: () => void
   getOrder: (orderId: string) => Promise<Order>
 }
@@ -38,19 +30,10 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<OrderError | null>(null)
   const { clearCart } = useCart()
+  const { customer } = useAuth()
 
   const createOrderFromCart = useCallback(
-    async (
-      cartState: CartState,
-      customerInfo: {
-        email: string
-        phone: string
-        shippingAddress: OrderAddress
-        billingAddress?: OrderAddress
-        customerNotes?: string
-        preferredDeliveryDate?: string
-      },
-    ): Promise<Order> => {
+    async (cartState: CartState, customerInfo: CreateCustomerDto): Promise<Order> => {
       setIsLoading(true)
       setError(null)
 
@@ -70,26 +53,33 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           totalDiscount: 0, // Implement discount logic if needed
         }))
 
+        let orderCustomer: Customer
+
+        if (customer) {
+          orderCustomer = customer
+        } else {
+          // Create a new customer
+          orderCustomer = await customerService.create(customerInfo)
+        }
+
         const orderData: CreateOrderDto = {
-          customerId: `cu_${Date.now()}`, // Generate temporary customer ID
-          email: customerInfo.email,
-          phone: customerInfo.phone,
+          customerId: orderCustomer.id,
+          email: orderCustomer.email,
+          phone: orderCustomer.phone,
           currencyId: DEFAULT_CURRENCY_ID,
           totalPrice,
           subtotalPrice,
           totalTax,
           totalDiscounts: 0, // Implement discount logic if needed
           lineItems,
-          shippingAddressId: customerInfo.shippingAddress.id,
-          billingAddressId: customerInfo.billingAddress?.id || customerInfo.shippingAddress.id,
+          shippingAddressId: orderCustomer.addresses[0]?.id,
+          billingAddressId: orderCustomer.addresses[0]?.id,
           paymentProviderId: DEFAULT_PAYMENT_PROVIDER,
           shippingMethodId: DEFAULT_SHIPPING_METHOD,
-          customerNotes: customerInfo.customerNotes,
-          preferredDeliveryDate: customerInfo.preferredDeliveryDate,
           source: "web",
         }
 
-        const createdOrder = await orderService.create('/order', orderData)
+        const createdOrder = await orderService.create('/orders',orderData)
         setCurrentOrder(createdOrder)
         clearCart() // Clear the cart after successful order creation
         return createdOrder
@@ -104,7 +94,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     },
-    [clearCart],
+    [clearCart, customer],
   )
 
   const getOrder = useCallback(async (orderId: string): Promise<Order> => {
@@ -155,4 +145,3 @@ export function useOrder() {
   }
   return context
 }
-

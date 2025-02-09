@@ -268,7 +268,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                       )}
                     >
                       <Image
-                        src={generate_url(productImages[selectedImageIndex])}
+                        src={generate_url(img)}
                         alt={`${product?.name} - Vista ${index + 1}`}
                         fill
                         className="object-contain p-1"
