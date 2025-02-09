@@ -5,7 +5,7 @@ import { HorizontalProductCard } from "./horizontal-card"
 import type { Product } from "@/types/product"
 import { useProducts } from "@/contexts/product.context"
 import { useCategories } from "@/contexts/categories.context"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 
 
@@ -15,35 +15,47 @@ export function SportsClothingSection() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
     
-    useEffect(() => {
-        console.log("products", products)
-        if (selectedCategory) {
-          const filtered = products.filter(product =>
-            product.categories.some((cat: any) => cat.id === selectedCategory)
-          );
-          console.log("prodcuts", products)
-          console.log("filtered", filtered)
-          setFilteredProducts(filtered);
-        } else {
-          setFilteredProducts(products); // Muestra todos los productos si no hay categoría seleccionada
-        }
-      }, [selectedCategory, products]);
-    
-      const clothingCategories = [0, 4, 5, 7]  // Índices deseados
-        .filter(index => index < categories.length)  // Evitar índices fuera del rango
-        .map(index => categories[index]);
 
-    const handleCategoryChange = (category: string) => {
-        setSelectedCategory(category)
-      }
+    const clothingCategories = useMemo(() => {
+        return [0, 2, 3, 4]
+            .filter(index => index < categories.length)  // Evitar error si categories aún no tiene datos
+            .map(index => categories[index]);
+        }, [categories]);
+
+
+    useEffect(() => {
+        if (clothingCategories.length > 0 && !selectedCategory) {
+            setSelectedCategory(clothingCategories[0].id);
+        }
+    }, [clothingCategories]);
+
+
+
+    useEffect(() => {
+        if (selectedCategory) {
+            const filtered = products.filter(product =>
+                product.categories.some((cat: any) => cat.id === selectedCategory)
+            );
+            setFilteredProducts(filtered);
+        } else {
+            setFilteredProducts([]); // Evitar mostrar datos incorrectos si `selectedCategory` es null
+        }
+    }, [selectedCategory, products]);
+    
+
+
+    const handleCategoryChange = (category_id: string) => {
+        console.log("category", selectedCategory)
+        setSelectedCategory(category_id)
+    }
     return (
         <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4 max-w-7xl">
             <div className="text-center mb-8">
             <h2 className="text-3xl font-bold">Ropa Deportiva</h2>
             </div>
-
-            <Tabs defaultValue={clothingCategories[0]?.id} className="w-full"
+            {clothingCategories.length > 0 && (
+            <Tabs defaultValue={clothingCategories[0].id} className="w-full"
             onValueChange={handleCategoryChange}>
             <TabsList className="flex justify-center mb-8 bg-transparent border-b w-full gap-8">
                 {clothingCategories.map((category) => (
@@ -71,7 +83,7 @@ export function SportsClothingSection() {
                 </div>
                 </TabsContent>
             ))}
-            </Tabs>
+            </Tabs>)}
         </div>
         </section>
     )
