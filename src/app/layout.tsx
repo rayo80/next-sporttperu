@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { OrderProvider } from "@/contexts/order.context";
 import { AuthProvider } from "@/contexts/auth.context";
 import { AddressProvider } from "@/contexts/address.context";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -23,6 +24,7 @@ export default function RootLayout({
                 <AddressProvider>
                   <OrderProvider>
                   {children}
+                  <Toaster />
                   </OrderProvider>
                 </AddressProvider>
               </AuthProvider>

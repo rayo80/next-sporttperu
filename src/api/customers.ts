@@ -20,6 +20,7 @@ export const customerService = {
       const response = await api.post("/customers", customerData)
       return response.data
     } catch (error) {
+      console.log("poorque no entre aqui")
       if (axios.isAxiosError(error)) {
         throw new Error(error.response?.data.message || "Error creating customer")
       }

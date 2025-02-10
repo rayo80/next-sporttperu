@@ -38,6 +38,9 @@ interface VariantAttributeGroup {
   available: { [key: string]: boolean }
 }
 
+const generateUrl = (url: string) => {
+  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+}
 
 const colorOptions: ColorOption[] = [
   { id: "pink", label: "Rosa", value: "pink", className: "bg-pink-500" },
@@ -66,17 +69,13 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   const product = getProductSlug(rparams.slug)
   const imageUrls = product?.imageUrls
 
-  const generate_url = (url: string) => {
-    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
-  }
-
   const defaultImage = (imageUrls: string[]) => {
     return imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? generate_url(imageUrls[0])
+    ? generateUrl(imageUrls[0])
     : "/assets/image.png";
   }
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? generate_url(imageUrls[0])
+    ? generateUrl(imageUrls[0])
     : "/assets/image.png";
     
   const productImages = product?.imageUrls.length ? product.imageUrls : ["/placeholdes.svg"]
@@ -212,7 +211,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           <div className="space-y-4">
             <div className="aspect-square relative border rounded-lg overflow-hidden">
               <Image
-                src={generate_url(productImages[selectedImageIndex])}
+                src={generateUrl(productImages[selectedImageIndex])}
                 alt="Tenergy 05 FX"
                 fill
                 className="object-contain"
@@ -268,7 +267,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                       )}
                     >
                       <Image
-                        src={generate_url(img)}
+                        src={generateUrl(img)}
                         alt={`${product?.name} - Vista ${index + 1}`}
                         fill
                         className="object-contain p-1"

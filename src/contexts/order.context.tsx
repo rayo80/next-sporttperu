@@ -21,7 +21,7 @@ interface OrderContextType {
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined)
 
-const DEFAULT_CURRENCY_ID = "curr_f62e7f75-f8f4" // PEN
+const DEFAULT_CURRENCY_ID = "curr_0536edd0-2193" // PEN
 const DEFAULT_PAYMENT_PROVIDER = "provider_mercadopago"
 const DEFAULT_SHIPPING_METHOD = "shipping_standard"
 
@@ -45,7 +45,6 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
         // Convert cart items to order items
         const lineItems = cartState.items.map((item) => ({
-          productId: item.product.slug,
           variantId: item.variant.id,
           quantity: item.quantity,
           title: item.product.title,
@@ -58,8 +57,13 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         if (customer) {
           orderCustomer = customer
         } else {
-          // Create a new customer
-          orderCustomer = await customerService.create(customerInfo)
+          try {
+            // Create a new customer
+            orderCustomer = await customerService.create(customerInfo)
+          } catch (error) {
+            console.error("Error creating customer:", error)
+            throw new Error("Failed to create customer. Please try again.")
+          }
         }
 
         const orderData: CreateOrderDto = {
@@ -74,12 +78,12 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           lineItems,
           shippingAddressId: orderCustomer.addresses[0]?.id,
           billingAddressId: orderCustomer.addresses[0]?.id,
-          paymentProviderId: DEFAULT_PAYMENT_PROVIDER,
-          shippingMethodId: DEFAULT_SHIPPING_METHOD,
+          // paymentProviderId: DEFAULT_PAYMENT_PROVIDER,
+          // shippingMethodId: DEFAULT_SHIPPING_METHOD,
           source: "web",
         }
 
-        const createdOrder = await orderService.create('/orders',orderData)
+        const createdOrder = await orderService.create('/order',orderData)
         setCurrentOrder(createdOrder)
         clearCart() // Clear the cart after successful order creation
         return createdOrder

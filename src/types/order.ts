@@ -1,26 +1,120 @@
+
+export interface OrderCustomer {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  phone: string
+  acceptsMarketing: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderShippingMethod {
+  id: string
+  name: string
+  description: string
+  estimatedDeliveryTime: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderPaymentProvider {
+  id: string
+  name: string
+  type: string
+  description: string
+  isActive: boolean
+  credentials: Record<string, unknown>
+  currencyId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderCurrency {
+  id: string
+  code: string
+  name: string
+  symbol: string
+  decimalPlaces: number
+  symbolPosition: "BEFORE" | "AFTER"
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderLineItemVariant {
+  id: string
+  productId: string
+  title: string
+  sku: string
+  isActive: boolean
+  attributes: {
+    [key: string]: string
+  }
+  imageUrl: string
+  compareAtPrice: number | null
+  inventoryQuantity: number
+  weightValue: string
+  position: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderLineItem {
+  id: string
+  orderId: string
+  variantId: string
+  title: string
+  quantity: number
+  price: string
+  totalDiscount: string
+  createdAt: string
+  updatedAt: string
+  variant: OrderLineItemVariant
+}
+
 export interface Order {
-    customerId: string; // ID del cliente, ej: "cu_04a71a2a-dbbc"
-    email: string; // Email del cliente
-    phone: string; // Teléfono del cliente
-    currencyId: string; // ID de la moneda, ej: "curr_111b1883-19fe"
-    totalPrice: number; // Precio total del pedido
-    subtotalPrice: number; // Precio subtotal antes de impuestos y descuentos
-    totalTax: number; // Total de impuestos aplicados
-    totalDiscounts: number; // Total de descuentos aplicados
-    lineItems: OrderItem[]; // Lista de productos en el pedido
-    shippingAddressId?: string; // ID de la dirección de envío
-    billingAddressId?: string; // ID de la dirección de facturación
-    couponId?: string; // ID del cupón aplicado (opcional)
-    paymentProviderId: string; // ID del proveedor de pago
-    shippingMethodId: string; // ID del método de envío
-    financialStatus: "PENDING" | "PAID" | "FAILED"; // Estado financiero
-    fulfillmentStatus: "UNFULFILLED" | "FULFILLED" | "CANCELLED"; // Estado de cumplimiento
-    shippingStatus: "PENDING" | "SHIPPED" | "DELIVERED"; // Estado del envío
-    customerNotes?: string; // Notas del cliente (opcional)
-    internalNotes?: string; // Notas internas del sistema (opcional)
-    source: string; // Origen del pedido, ej: "admin", "web", etc.
-    preferredDeliveryDate?: string; // Fecha preferida de entrega (ISO string, opcional)
-  };
+  id: string
+  customerId: string
+  orderNumber: number
+  financialStatus: string
+  fulfillmentStatus: string
+  currencyId: string
+  totalPrice: string
+  subtotalPrice: string
+  totalTax: string
+  totalDiscounts: string
+  shippingAddressId: string
+  billingAddressId: string
+  couponId: string | null
+  paymentProviderId: string
+  paymentStatus: string
+  paymentDetails: string | null
+  shippingMethodId: string
+  shippingStatus: string
+  trackingNumber: string | null
+  trackingUrl: string | null
+  estimatedDeliveryDate: string | null
+  shippedAt: string | null
+  deliveredAt: string | null
+  customerNotes: string
+  internalNotes: string
+  source: string
+  preferredDeliveryDate: string
+  createdAt: string
+  updatedAt: string
+  customer: OrderCustomer
+  lineItems: OrderLineItem[]
+  shippingAddress: OrderAddress
+  billingAddress: OrderAddress
+  coupon: null | any
+  paymentProvider: OrderPaymentProvider
+  shippingMethod: OrderShippingMethod
+  currency: OrderCurrency
+}
+
   
   export interface OrderItem  {
     productId: string; // ID del producto
@@ -31,21 +125,46 @@ export interface Order {
     totalDiscount: number; // Descuento total aplicado al producto
   };
 
-  export interface CreateOrderDto extends Omit<Order, "financialStatus" | "fulfillmentStatus" | "shippingStatus"> {
-    // Omit status fields as they will be set by the backend
+
+  export interface CreateOrderLineItem {
+    variantId: string
+    quantity: number
+    price: number
+  }
+
+  export interface CreateOrderDto {
+    customerId: string
+    email: string
+    phone: string
+    currencyId: string
+    totalPrice: number
+    subtotalPrice: number
+    totalTax: number
+    totalDiscounts: number
+    lineItems: CreateOrderLineItem[]
+    shippingAddressId?: string
+    billingAddressId?: string
+    paymentProviderId?: string
+    shippingMethodId?: string
+    customerNotes?: string
+    preferredDeliveryDate?: string
+    source: string
   }
   
   export interface OrderAddress {
     id: string
-    firstName: string
-    lastName: string
+    isDefault: boolean
+    company: string
     address1: string
     address2?: string
     city: string
-    state: string
-    postalCode: string
+    province: string
+    zip: string
     country: string
     phone: string
+    customerId: string
+    createdAt: string
+    updatedAt: string
   }
   
   export interface OrderError {

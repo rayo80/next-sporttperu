@@ -26,8 +26,9 @@ export const orderService = {
   },
 
   getById: async (endpoint: string, orderId: string): Promise<Order> => {
+    console.log('getById', endpoint, orderId)
     try {
-      const response = await api.get(`/${endpoint}/${orderId}`)
+      const response = await api.get(`${endpoint}/${orderId}`)
       return response.data
     } catch (error) {
       if (axios.isAxiosError(error)) {
