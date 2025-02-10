@@ -21,24 +21,18 @@ export function ProductCard({
   compact = false,
 }: ProductCardProps) {
   const { addItem } = useCart()
-  const { title, slug, imageUrls, inventoryQuantity, prices, status, variants} = product
+  const { title, slug, imageUrls, prices, status, variants} = product
   const url = `${process.env.BASE_IMAGE_URL}/uploads/${imageUrls[0]}`;
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
     ? url
     : "/assets/image.png";
-  // const imagePath = imageUrls[0]
-  // const fullImageUrl = imagePath
-  // ? `${process.env.BASE_IMAGE_URL}/${imagePath}`
-  // : '/default-image.png';
-  // const new_url = imagePath == "" ? '/image.png' : imagePath;
-  // const new_url = "https://cdn.shopify.com/s/files/1/0678/9618/0971/files/IMG_6073.jpg?v=1714077954"
   const defaultVariant = variants[0]
   const price = defaultVariant?.prices[0]?.price ? Number.parseFloat(defaultVariant.prices[0].price) : 0
   const mainPrice = prices?.find(p => p.currencyId === 'PEN')
-  const isOutOfStock = inventoryQuantity === 0
   const isOnSale = status === "PUBLISHED" && price < (variants[0]?.price || price)
   const discount = isOnSale ? Math.round(((variants[0]?.price || price) - price) / (variants[0]?.price || price) * 100) : 0
-
+  const inventoryQuantity = variants[0]?.inventoryQuantity || 0
+  const isOutOfStock = inventoryQuantity === 0
   const handleAddToCart = () => {
     if (defaultVariant){
       console.log("Añadiendo", defaultVariant)
@@ -102,7 +96,7 @@ export function ProductCard({
         <div className="p-4 w-full">
           <h5 className="text-sm">{title}</h5>
           <div className="flex items-baseline gap-2 mt-1">
-            {price && (
+            {discount > 0 && (
               <span className="text-sm text-muted-foreground line-through">
                 S/. {price.toFixed(2)}
               </span>
