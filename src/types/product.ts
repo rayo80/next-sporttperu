@@ -106,7 +106,6 @@ export interface Product {
     collectionIds: string[]
     imageUrls: string[]
     sku: string
-    inventoryQuantity: number
     weightValue: number
     weightUnit: string
     price?: number //////////

@@ -14,14 +14,13 @@ interface HorizontalProductCardProps {
 
 export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
   const { addItem } = useCart()
-  const { title, slug, imageUrls, inventoryQuantity, variants } = product
+  const { title, slug, imageUrls, variants } = product
   const defaultVariant = variants[0]
   const price = defaultVariant?.prices[0]?.price ? Number.parseFloat(defaultVariant.prices[0].price) : 0
-
+  const inventoryQuantity = variants[0]?.inventoryQuantity || 0
 
   const handleAddToCart = () => {
     if (defaultVariant){
-      console.log("Añadiendo", defaultVariant)
       addItem(product, defaultVariant)
       toast.success("Producto añadido al carrito")
       console.log("Añadir al carrito")

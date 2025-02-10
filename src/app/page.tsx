@@ -7,9 +7,11 @@ import { PromoBanners } from "@/components/promo-banners"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
+import { useCategories } from "@/contexts/categories.context"
 import { useProducts } from "@/contexts/product.context"
 import { Product } from "@/types/product"
 import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 
 
 
@@ -28,7 +30,35 @@ const sliderRowBreakpoints = {
 }
 
 export default function Home() {
-  const { products, isLoading, error, getProducts } = useProducts()  
+  const { products, isLoading, error, getProducts } = useProducts();
+  const { items: categories} = useCategories();
+  const maderaCategory = 1;
+  const jebeCategory = 3;
+
+  const paletasProducts = useMemo(() => {
+    if (!maderaCategory) return products;
+    if (maderaCategory < 0 || maderaCategory >= categories.length) {
+      return products; // Evita acceder a un índice fuera de rango
+    }
+  
+    const selectedCategory = categories[maderaCategory];
+    return products.filter(product =>
+      product.categories.some((cat: any) => cat.id === selectedCategory.id)
+    );
+  }, [products, categories]);
+
+  const jebesProducts = useMemo(() => {
+    if (!jebeCategory) return products;
+    if (jebeCategory < 0 || jebeCategory >= categories.length) {
+      return products; // Evita acceder a un índice fuera de rango
+    }
+
+    const selectedCategory = categories[jebeCategory];
+    return products.filter(product =>
+      product.categories.some((cat: any) => cat.id === selectedCategory.id)
+    );
+  }, [products, categories]);
+
   return (
     <>
       <SiteHeader />
@@ -49,7 +79,7 @@ export default function Home() {
               <span className="font-normal">Jebe</span>{" "}
               <span className="font-bold">Butterfly</span>
             </h2>
-            <ProductSlider products={products} breakpoints={sliderRowBreakpoints} />
+            <ProductSlider products={jebesProducts} breakpoints={sliderRowBreakpoints} />
             <div className="flex justify-center">
                 <Button asChild variant="outline" className="rounded-full px-8">
                     <Link href="/collections/gomas">Explora</Link>
@@ -63,7 +93,7 @@ export default function Home() {
               <span className="font-normal">Maderas</span>{" "}
               <span className="font-bold">Butterfly</span>
             </h2>
-            <ProductSlider products={products} breakpoints={sliderRowBreakpoints} />
+            <ProductSlider products={paletasProducts} breakpoints={sliderRowBreakpoints} />
             <div className="flex justify-center">
                 <Button asChild variant="outline" className="rounded-full px-8">
                     <Link href="/collections/maderas">Explora</Link>
