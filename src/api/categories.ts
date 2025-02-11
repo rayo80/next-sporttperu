@@ -1,18 +1,9 @@
 import axios from 'axios';
 import { CreateCategoryDto } from '@/contexts/categories.context';
 import { Category } from '@/types/category';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sporttnest.emetstudio.com';
-const TOKEN = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv7oK2LrZxTbbZxk3zSTxB0W0dXpJ9UDszX8aFQ9/uNsMZj+v34y6b57Jprds0kZyA8yDmhnxHvR5Ln85YVpP7Zm1fZqV+m1pWn6pSLoQo5X9nM5XwvR9LmUpl9Jl5m6+lM9GHRgVxyN7EHRR+op+Yh7VGpLLftNyP3gf+5RfzHk4vvzLz1XOD+SbV02RHEh5pP/9JBo9CjvZZZ7sFIJh';
+import api from './base';
 
 
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${TOKEN}`
-  }
-});
 
 export const categoryService = {
   getAll: async (endpoint: string): Promise<Category[]> => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Grid, List, ChevronLeft, ChevronRight } from 'lucide-react'
 import { SiteHeader } from "@/components/site-header"
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/breadcrumb"
 import { useProducts } from "@/contexts/product.context"
 import { SiteFooter } from "@/components/site-footer"
+import { useParams } from "next/navigation"
+import { useCategories } from "@/contexts/categories.context"
 
 const sortOptions = [
   { label: "Destacados", value: "featured" },
@@ -48,6 +50,7 @@ const filterOptions = {
 }
 
 export default function CollectionPage({ params }: { params: { slug: string } }) {
+  const rparams = useParams<{slug: string }>()
   const { products, isLoading, error, getProducts } = useProducts()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [currentPage, setCurrentPage] = useState(1)
@@ -57,6 +60,17 @@ export default function CollectionPage({ params }: { params: { slug: string } })
     brand: [] as string[],
   })
   // const [filteredProducts, setFilteredProducts] = useState(allProducts)
+
+  const {getCategorySlug} = useCategories()
+
+  const category = getCategorySlug(rparams.slug)
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(product =>
+      product.categories.some((cat: any) => cat.slug === rparams.slug)
+    );
+  }, [products]);
+
   const totalPages = Math.ceil(products.length / 4)
 
 
@@ -65,7 +79,8 @@ export default function CollectionPage({ params }: { params: { slug: string } })
     setFilters(prev => ({ ...prev, [filterType]: selectedOptions }))
   }
 
-  const currentProducts = products.slice((currentPage - 1) * 4, currentPage * 4)
+  const currentProducts = filteredProducts.slice((currentPage - 1) * 4, currentPage * 4)
+
 
   return (
     <>
@@ -81,11 +96,11 @@ export default function CollectionPage({ params }: { params: { slug: string } })
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Gomas</BreadcrumbPage>
+                <BreadcrumbPage>{category?.name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <h1 className="text-3xl font-bold text-center">Gomas</h1>
+          <h1 className="text-3xl font-bold text-center">{category?.name}</h1>
         </div>
 
         <div className="grid md:grid-cols-[240px_1fr] gap-8">
