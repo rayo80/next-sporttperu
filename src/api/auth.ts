@@ -1,16 +1,22 @@
 import axios from "axios"
 import type { Customer, CreateCustomerDto } from "@/types/customer"
 import api from "./base"
+import { decodeJWT } from "@/utils/jwt"
 
 interface LoginCredentials {
   email: string
   password: string
 }
 
+interface LoginResponse {
+  access_token: string
+  userInfo: Customer
+}
+
 export const authService = {
-  login: async (credentials: LoginCredentials): Promise<Customer> => {
+  login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
-      const response = await api.post("/auth/login", credentials)
+      const response = await api.post("/customers/login", credentials)
       return response.data
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -20,9 +26,9 @@ export const authService = {
     }
   },
 
-  register: async (userData: CreateCustomerDto & { password: string }): Promise<Customer> => {
+  register: async (userData: CreateCustomerDto): Promise<Customer> => {
     try {
-      const response = await api.post("/auth/register", userData)
+      const response = await api.post("/customers", userData)
       return response.data
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -43,15 +49,39 @@ export const authService = {
     }
   },
 
-  getCurrentUser: async (): Promise<Customer | null> => {
+  getCustomerById: async (customerId: string): Promise<Customer> => {
     try {
-      const response = await api.get("/auth/me")
+      const response = await api.get(`/customers/${customerId}`)
       return response.data
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        return null
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data.message || "Error fetching customer data")
       }
       throw error
+    }
+  },
+
+
+  getCurrentUser: (): { id: string } | null => {
+    const token = localStorage.getItem("token")
+    if (!token) return null
+
+    const decodedToken = decodeJWT(token)
+    if (!decodedToken || Date.now() >= decodedToken.exp * 1000) {
+      localStorage.removeItem("token")
+      return null
+    }
+
+    return { id: decodedToken.id }
+  },
+
+  getCompleteCustomerData: async (customerId: string): Promise<Customer | null> => {
+    try {
+      const customerData = await authService.getCustomerById(customerId)
+      return customerData
+    } catch (error) {
+      console.error("Error fetching complete customer data:", error)
+      return null
     }
   },
 }

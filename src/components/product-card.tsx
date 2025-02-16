@@ -16,15 +16,20 @@ interface ProductCardProps {
   compact?: boolean
 }
 
+const generate_url = (url: string) => {
+  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+}
+
+
 export function ProductCard({
   product,
   compact = false,
 }: ProductCardProps) {
   const { addItem } = useCart()
   const { title, slug, imageUrls, prices, status, variants} = product
-  const url = `${process.env.BASE_IMAGE_URL}/uploads/${imageUrls[0]}`;
+
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? url
+    ? generate_url(imageUrls[0])
     : "/assets/image.png";
   const defaultVariant = variants[0]
   const price = defaultVariant?.prices[0]?.price ? Number.parseFloat(defaultVariant.prices[0].price) : 0

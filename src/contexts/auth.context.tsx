@@ -16,8 +16,10 @@ interface AuthContextType {
   isLoading: boolean
   error: string | null
   login: (credentials: LoginCredentials) => Promise<void>
-  register: (userData: CreateCustomerDto & { password: string }) => Promise<void>
+  register: (userData: CreateCustomerDto) => Promise<void>
   logout: () => Promise<void>
+  isAuthenticated: () => boolean
+  getToken: () => string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -28,19 +30,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    authService
-      .getCurrentUser()
-      .then(setCustomer)
-      .catch((err) => setError(err.message))
-      .finally(() => setIsLoading(false))
+    const fetchUser = async () => {
+      setIsLoading(true)
+      try {
+        const basicUser = authService.getCurrentUser()
+        if (basicUser) {
+          const completeUser = await authService.getCompleteCustomerData(basicUser.id)
+          if (completeUser) {
+            setCustomer(completeUser)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+        setError("Failed to fetch user data")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
   }, [])
 
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true)
     setError(null)
     try {
-      const customer = await authService.login(credentials)
-      setCustomer(customer)
+      const { access_token, userInfo } = await authService.login(credentials)
+      localStorage.setItem("token", access_token)
+      setCustomer(userInfo)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during login")
       throw err
@@ -49,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const register = async (userData: CreateCustomerDto & { password: string }) => {
+  const register = async (userData: CreateCustomerDto) => {
     setIsLoading(true)
     setError(null)
     try {
@@ -68,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null)
     try {
       await authService.logout()
+      localStorage.removeItem("token")
       setCustomer(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during logout")
@@ -75,6 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const isAuthenticated = () => {
+    return !!localStorage.getItem("token")
+  }
+
+  const getToken = () => {
+    return localStorage.getItem("token")
   }
 
   return (
@@ -86,6 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        isAuthenticated,
+        getToken,
       }}
     >
       {children}

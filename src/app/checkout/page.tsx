@@ -30,17 +30,16 @@ interface FormErrors {
   phone?: string
 }
 const generateUrl = (url: string) => {
-  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  return `${process.env.NEXT_PUBLIC_API}/uploads/${url}`;
 }
 
+const defaultImage = (imageUrls: string[]) => {
+  return imageUrls && imageUrls.length > 0 && imageUrls[0]
+  ? generateUrl(imageUrls[0])
+  : "/assets/image.png";
+}
 
 export default function CheckoutPage() {
-
-  const defaultImage = (imageUrls: string[]) => {
-    return imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? generateUrl(imageUrls[0])
-    : "/assets/image.png";
-  }
 
   const router = useRouter()
   const { items, total, clearCart } = useCart()
@@ -457,7 +456,90 @@ export default function CheckoutPage() {
                 placeholder="Añade alguna nota para el pedido"
               />
             </section>
-
+            {/* Payment Methods */}
+            <section>
+              <h2 className="text-xl font-semibold mb-4">Método de Pago</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Todas las transacciones son seguras y están encriptadas.
+              </p>
+              <div className="space-y-4">
+                <div className="border rounded-lg overflow-hidden">
+                  <RadioGroup defaultValue="mercadopago" className="divide-y">
+                    <div className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="mercadopago" id="mercadopago" />
+                        <Label htmlFor="mercadopago" className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span>Mercado Pago</span>
+                            <div className="flex items-center gap-2">
+                              <Image
+                                src="assets/mercadopago.svg"
+                                alt="Visa"
+                                width={32}
+                                height={20}
+                                className="h-5 w-auto"
+                              />
+                              <Image
+                                src="assets/visa.svg"
+                                alt="Mastercard"
+                                width={32}
+                                height={20}
+                                className="h-5 w-auto"
+                              />
+                              <Image
+                                src="assets/master.svg"
+                                alt="master"
+                                width={32}
+                                height={20}
+                                className="h-5 w-auto"
+                              />
+                              <span className="text-sm text-muted-foreground">+3</span>
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+                      <div className="mt-4 pl-6">
+                        <div className="flex justify-center">
+                          <div className="text-center max-w-sm">
+                            <div className="mx-auto w-16 h-16 mb-4 text-muted-foreground">
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <path d="M3 9h18" />
+                                <path d="M15 15h3" />
+                              </svg>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Después de hacer clic en "Pagar ahora", serás redirigido a Mercado Pago para completar tu
+                              compra de forma segura.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="bank" id="bank" />
+                        <Label htmlFor="bank">Depósito Bancario</Label>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="reserve" id="reserve" />
+                        <Label htmlFor="reserve">Solicitar Reserva</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </div>
+            </section>
+            
             {/* Submit Button */}
             <Button type="submit" className="w-full bg-pink-500 hover:bg-pink-600" disabled={isSubmitting}>
               {isSubmitting ? "Procesando..." : "Reservar Ahora"}

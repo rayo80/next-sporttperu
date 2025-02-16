@@ -26,5 +26,6 @@ export interface CreateCustomerDto {
   phone: string
   email?: string
   acceptsMarketing: boolean
+  password?: string
   addresses: Omit<Address, "id">[]
 }
