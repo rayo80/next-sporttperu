@@ -8,8 +8,9 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { ButtonCard } from "./button-card"
 import { useCart } from "@/contexts/cart.context"
-import { Product } from "@/types/product"
+import { Product, ProductVariant, ProductVariantModel, VariantPrice } from "@/types/product"
 import { toast } from "sonner"
+import { useShop } from "@/contexts/shop.context"
 
 interface ProductCardProps {
   product: Product
@@ -26,14 +27,16 @@ export function ProductCard({
   compact = false,
 }: ProductCardProps) {
   const { addItem } = useCart()
+  const { selectedCurrency } = useShop()
   const { title, slug, imageUrls, prices, status, variants} = product
 
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
     ? generate_url(imageUrls[0])
     : "/assets/image.png";
   const defaultVariant = variants[0]
-  const price = defaultVariant?.prices[0]?.price ? Number.parseFloat(defaultVariant.prices[0].price) : 0
-  const mainPrice = prices?.find(p => p.currencyId === 'PEN')
+  // const price = defaultVariant?.prices[0]?.price ? Number.parseFloat(defaultVariant.prices[0].price) : 0
+  const priceObject = defaultVariant?.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+  const price = Number.parseFloat(priceObject?.price || "0")
   const isOnSale = status === "PUBLISHED" && price < (variants[0]?.price || price)
   const discount = isOnSale ? Math.round(((variants[0]?.price || price) - price) / (variants[0]?.price || price) * 100) : 0
   const inventoryQuantity = variants[0]?.inventoryQuantity || 0
@@ -103,11 +106,11 @@ export function ProductCard({
           <div className="flex items-baseline gap-2 mt-1">
             {discount > 0 && (
               <span className="text-sm text-muted-foreground line-through">
-                S/. {price.toFixed(2)}
+                {selectedCurrency?.symbol} {price.toFixed(2)}
               </span>
             )}
             <span className="text-lg font-bold text-pink-500">
-              S/. {price?.toFixed(2)}
+                {selectedCurrency?.symbol} {price?.toFixed(2)}
             </span>
           </div>
           {inventoryQuantity > 0 && (

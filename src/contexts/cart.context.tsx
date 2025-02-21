@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useEffect, useReducer, type ReactNode } from "react"
 
-import type { Product, ProductVariant } from "@/types/product"
+import type { Currency, Product, ProductVariant, VariantPrice } from "@/types/product"
 import { CartItem, CartState } from "@/types/cart";
+import { useShop } from "./shop.context";
 
 
 type CartAction =
@@ -18,15 +19,16 @@ const initialState: CartState = {
   total: 0,
 }
 
-function calculateTotal(items: CartItem[]): number {
+function calculateTotal(items: CartItem[], selectedCurrency: Currency | null): number {
   return items.reduce((total, item) => {
-    const price = item.variant.prices[0]?.price ? Number.parseFloat(item.variant.prices[0].price) : 0
+    const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+    const price = Number.parseFloat(priceObject?.price || "0")
+
     return total + price * item.quantity
   }, 0)
 }
 
 function cartReducer(state: CartState, action: CartAction): CartState {
-  
   let newState: CartState
   switch (action.type) {
     case "ADD_ITEM": {
@@ -45,7 +47,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
       newState = {
         items: newItems,
-        total: calculateTotal(newItems),
+        total: 0,
       }
       break
     }
@@ -55,7 +57,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       const newItems = state.items.filter((item) => item.variant.id !== action.payload)
       newState = {
         items: newItems,
-        total: calculateTotal(newItems),
+        total: 0,
       }
       break
     }
@@ -66,7 +68,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       )
       newState = {
         items: newItems,
-        total: calculateTotal(newItems),
+        total: 0,
       }
       break
     }
@@ -97,6 +99,7 @@ interface CartContextType extends CartState {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { selectedCurrency } = useShop()
   const [state, dispatch] = useReducer(cartReducer, initialState)
 
   useEffect(() => {

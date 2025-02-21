@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Facebook, Instagram, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CurrencySelector } from "./currency-selector"
 
 export function SiteFooter() {
   return (

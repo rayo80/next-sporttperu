@@ -7,6 +7,8 @@ import { OrderProvider } from "@/contexts/order.context";
 import { AuthProvider } from "@/contexts/auth.context";
 import { AddressProvider } from "@/contexts/address.context";
 import { Toaster } from "sonner";
+import { ShopProvider } from "@/contexts/shop.context";
+import { CurrencySelector } from "@/components/currency-selector";
 
 export default function RootLayout({
   children,
@@ -16,21 +18,22 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="w-full container-full ">
-
-        <ProductProvider>
-          <CartProvider>
-            <CategoryProvider>
-              <AuthProvider>
-                <AddressProvider>
-                  <OrderProvider>
-                  {children}
-                  <Toaster />
-                  </OrderProvider>
-                </AddressProvider>
-              </AuthProvider>
-            </CategoryProvider>
-          </CartProvider>
-        </ProductProvider>
+        <ShopProvider>
+          <ProductProvider>
+            <CartProvider>
+              <CategoryProvider>
+                <AuthProvider>
+                  <AddressProvider>
+                    <OrderProvider>
+                    {children}
+                    <Toaster />
+                    </OrderProvider>
+                  </AddressProvider>
+                </AuthProvider>
+              </CategoryProvider>
+            </CartProvider>
+          </ProductProvider>
+        </ShopProvider>
       </body>
     </html>
   )

@@ -1,5 +1,5 @@
 export interface Address {
-  id?: string
+  id: string
   company: string
   address1: string
   address2?: string

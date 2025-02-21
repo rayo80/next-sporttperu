@@ -1,6 +1,7 @@
 "use client"
 import { CategoriesSidebar } from "@/components/categories-sidebar"
 import { SportsClothingSection } from "@/components/clothing-section"
+import { CurrencySelector } from "@/components/currency-selector"
 import { HeroSlider } from "@/components/hero-slider"
 import { ProductSlider } from "@/components/product-slider"
 import { PromoBanners } from "@/components/promo-banners"
@@ -104,6 +105,7 @@ export default function Home() {
         <PromoBanners />
         <SportsClothingSection />
       </main>
+      <CurrencySelector/>
       <SiteFooter />
     </>
   )

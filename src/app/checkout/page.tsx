@@ -20,6 +20,7 @@ import { CartItemModel } from "@/types/cart"
 import Link from "next/link"
 import { CreateCustomerDto } from "@/types/customer"
 import { useOrder } from "@/contexts/order.context"
+import { mercadopagoService } from "@/api/mercado-pago"
 
 interface FormErrors {
   email?: string
@@ -42,16 +43,16 @@ const defaultImage = (imageUrls: string[]) => {
 export default function CheckoutPage() {
 
   const router = useRouter()
-  const { items, total, clearCart } = useCart()
+  const { items: cartItems, total, clearCart } = useCart()
   const { createOrderFromCart } = useOrder()
-  const itemModels = items.map((i) => new CartItemModel(i));
+  const itemModels = cartItems.map((i) => new CartItemModel(i));
   const { customer, isLoading: isAuthLoading } = useAuth()
   const { addresses, createAddress, getAddresses, updateAddress, isLoading: isAddressLoading } = useAddress()
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const tax = total * 0.18 // 18% IGV
-  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
+  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [formData, setFormData] = useState<CreateCustomerDto>({
     firstName: "",
@@ -76,6 +77,7 @@ export default function CheckoutPage() {
     customerNotes: "",
     preferredDeliveryDate: "",
   })
+  const [paymentMethod, setPaymentMethod] = useState<string>("mercadopago")
 
   const validateField = useCallback(
     (name: string, value: string): string | undefined => {
@@ -167,11 +169,36 @@ export default function CheckoutPage() {
     }
 
     try {
-      const order = await createOrderFromCart({ items, total }, formData)
+      if (paymentMethod === "mercadopago") {
+        // Create MercadoPago preference
+        const itemsPref = cartItems.map((item) => ({
+          id: item.variant.id,
+          title: item.product.title,
+          unit_price: Number(item.variant.prices[0]?.price || 0),
+          quantity: item.quantity,
+        }))
+        
+        const init_point = await mercadopagoService.createPreference(
+          itemsPref,
+          formData,
+        )
+        
+        // Redirect to MercadoPago payment page
+        console.log("redirigeindomeeeeeeeeeeeeee")
+        window.location.href = init_point
+      } else {
+        // Proceed with other payment methods (create order directly)
+          const order = await createOrderFromCart({ items: cartItems, total }, formData)
+        
+          toast.success("¡Orden creada con éxito!")
+          clearCart()
+          router.push(`/order-confirmation/${order.id}`)
+      }
+      // const order = await createOrderFromCart({ items, total }, formData)
 
-      toast.success("¡Orden creada con éxito!")
-      clearCart()
-      router.push(`/order-confirmation/${order.id}`)
+      // toast.success("¡Orden creada con éxito!")
+      // clearCart()
+      // router.push(`/order-confirmation/${order.id}`)
     } catch (error) {
       console.log("Error creating order:", error)
       toast.error(error instanceof Error ? error.message : "Error al crear la orden. Por favor, inténtelo de nuevo.")
