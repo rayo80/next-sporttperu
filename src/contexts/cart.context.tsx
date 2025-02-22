@@ -13,6 +13,7 @@ type CartAction =
   | { type: "UPDATE_QUANTITY"; payload: { variantId: string; quantity: number } }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: CartState }
+  | { type: "UPDATE_TOTAL" }
 
 const initialState: CartState = {
   items: [],
@@ -77,6 +78,12 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       newState = initialState
       break
 
+    case "UPDATE_TOTAL":
+      return {
+        ...state,
+        total: state.total, // The actual calculation will be done in the effect
+      }
+
     case "LOAD_CART":
       newState = action.payload
       break
@@ -109,6 +116,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    const total = state.items.reduce((sum, item) => {
+      const price = item.variant.prices.find((p) => p.currency.code === selectedCurrency?.code)?.price || 0
+      return sum + price * item.quantity
+    }, 0)
+
+    dispatch({ type: "UPDATE_TOTAL" })
+  }, [state.items, selectedCurrency])
 
   const addItem = (product: Product, variant: ProductVariant) =>{
     console.log("Añadir variante a item", variant)
