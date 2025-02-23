@@ -4,9 +4,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Product } from "@/types/product"
+import type { Product, VariantPrice } from "@/types/product"
 import { toast } from "sonner"
 import { useCart } from "@/contexts/cart.context"
+import { useShop } from "@/contexts/shop.context"
 
 interface HorizontalProductCardProps {
   product: Product
@@ -16,7 +17,9 @@ export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
   const { addItem } = useCart()
   const { title, slug, imageUrls, variants } = product
   const defaultVariant = variants[0]
-  const price = defaultVariant?.prices[0]?.price ? Number.parseFloat(defaultVariant.prices[0].price) : 0
+  const { selectedCurrency } = useShop()
+  const priceObject = defaultVariant?.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+  const price = Number.parseFloat(priceObject?.price || "0")
   const inventoryQuantity = variants[0]?.inventoryQuantity || 0
 
   const handleAddToCart = () => {
@@ -51,7 +54,7 @@ export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
         <div className="flex-grow space-y-2">
           <h3 className="text-lg font-medium mb-2">{title}</h3>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-pink-500">S/. {price.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-pink-500">{selectedCurrency?.symbol} {price.toFixed(2)}</span>
           </div>
           {inventoryQuantity > 0 && (
             <div className="flex items-center gap-2">

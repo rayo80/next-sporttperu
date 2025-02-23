@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/contexts/cart.context"
 import Link from "next/link"
-import { CartItemModel } from "@/types/cart"
+import { CartItem, CartItemModel } from "@/types/cart"
+import { VariantPrice, VariantPriceModel } from "@/types/product"
+import { useShop } from "@/contexts/shop.context"
+import { get } from "http"
 
 interface CartDrawerProps {
   open: boolean
@@ -19,10 +22,17 @@ const generate_url = (url: string) => {
   return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
 }
 
+
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
+  const { selectedCurrency } = useShop()
   const { items, total, removeItem, updateQuantity } = useCart()
   const itemModels = items.map((i) => new CartItemModel(i));
 
+  const getPrice = (item: CartItem) => {
+    const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+    const price = Number.parseFloat(priceObject?.price || "0")
+    return price
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -70,7 +80,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           </Button>
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          S/. {item.variant.prices[0]?.priceAsNumber.toFixed(2)}
+                          {selectedCurrency?.symbol} {getPrice(item).toFixed(2)}
                         </p>
                       </div>
                       <div className="flex flex-1 items-end justify-between text-sm">
@@ -94,7 +104,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           </Button>
                         </div>
                         <div className="text-right font-medium">
-                          S/. {(item.variant.prices[0]?.priceAsNumber * item.quantity).toFixed(2)}
+                          {selectedCurrency?.symbol} {getPrice(item).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -108,7 +118,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             <div className="border-t pt-6 space-y-3">
               <div className="flex justify-between text-base font-medium">
                 <p>Total</p>
-                <p>S/. {total.toFixed(2)}</p>
+                <p>{selectedCurrency?.symbol} {total.toFixed(2)}</p>
               </div>
               <div className="space-y-2">
                 <Button 

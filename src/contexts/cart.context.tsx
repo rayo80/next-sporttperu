@@ -13,7 +13,7 @@ type CartAction =
   | { type: "UPDATE_QUANTITY"; payload: { variantId: string; quantity: number } }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: CartState }
-  | { type: "UPDATE_TOTAL" }
+  | { type: "SET_ITEMS"; payload: CartItem[] }
 
 const initialState: CartState = {
   items: [],
@@ -78,15 +78,21 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       newState = initialState
       break
 
-    case "UPDATE_TOTAL":
-      return {
-        ...state,
-        total: state.total, // The actual calculation will be done in the effect
-      }
+    // case "UPDATE_TOTAL":
+    //   return {
+    //     ...state,
+    //     total: state.total, // The actual calculation will be done in the effect
+    //   }
 
     case "LOAD_CART":
       newState = action.payload
       break
+
+    case "SET_ITEMS":
+      return {
+        ...state,
+        items: action.payload,
+      }
 
     default:
       return state
@@ -117,12 +123,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const total = state.items.reduce((sum, item) => {
-      const price = item.variant.prices.find((p) => p.currency.code === selectedCurrency?.code)?.price || 0
-      return sum + price * item.quantity
-    }, 0)
+    // Save cart to local storage whenever it changes
+    localStorage.setItem("cart", JSON.stringify(state.items))
+  }, [state.items])
 
-    dispatch({ type: "UPDATE_TOTAL" })
+  useEffect(() => {
+    dispatch({ type: "SET_ITEMS", payload: state.items }) // This will trigger a re-render with the new total
   }, [state.items, selectedCurrency])
 
   const addItem = (product: Product, variant: ProductVariant) =>{
@@ -145,7 +151,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider
       value={{
-        ...state,
+        items: state.items,
+        total: calculateTotal(state.items, selectedCurrency),
         addItem,
         removeItem,
         updateQuantity,

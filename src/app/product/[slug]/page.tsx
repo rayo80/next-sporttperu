@@ -18,13 +18,15 @@ import {
 } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
 import { useProducts } from "@/contexts/product.context"
-import { Product, ProductVariant } from "@/types/product"
+import { Product, ProductVariant, VariantPrice } from "@/types/product"
 import { useCart } from "@/contexts/cart.context"
 import {use} from "react"
 
 import { useParams } from 'next/navigation'
 import { SiteFooter } from "@/components/site-footer"
 import { toast } from "sonner"
+import { CurrencySelector } from "@/components/currency-selector"
+import { useShop } from "@/contexts/shop.context"
 interface ColorOption {
   id: string
   label: string
@@ -62,6 +64,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   const [scrollLeft, setScrollLeft] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
+  const {selectedCurrency} = useShop()
 
   // params = React.use(params)
   console.log('rparams', rparams)
@@ -157,8 +160,9 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   }
 
   const selectedVariant = findSelectedVariant()
-  const variantPrice = selectedVariant?.prices[0]?.price ? 
-    Number(selectedVariant.prices[0].price) : 0
+  const priceObject = selectedVariant?.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+  const variantPrice = Number.parseFloat(priceObject?.price || "0")
+
 
 
   const incrementQuantity = () => {
@@ -297,7 +301,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
             <div>
               <h1 className="text-3xl font-bold">{product?.title}</h1>
               <div className="mt-4">
-                <span className="text-3xl font-bold text-pink-500">S/. {variantPrice.toFixed(2)}</span>
+                <span className="text-3xl font-bold text-pink-500">{selectedCurrency?.symbol} {variantPrice.toFixed(2)}</span>
               </div>
             </div>
 
@@ -475,6 +479,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
             </div>
           </div>
         </div>
+        <CurrencySelector/>
       </main>
       <SiteFooter />
     </>

@@ -16,11 +16,13 @@ import { toast } from "sonner"
 import { useAddress } from "@/contexts/address.context"
 import { Address } from "@/types/address"
 import { useAuth } from "@/contexts/auth.context"
-import { CartItemModel } from "@/types/cart"
+import { CartItem, CartItemModel } from "@/types/cart"
 import Link from "next/link"
 import { CreateCustomerDto } from "@/types/customer"
 import { useOrder } from "@/contexts/order.context"
 import { mercadopagoService } from "@/api/mercado-pago"
+import { VariantPrice } from "@/types/product"
+import { useShop } from "@/contexts/shop.context"
 
 interface FormErrors {
   email?: string
@@ -41,7 +43,7 @@ const defaultImage = (imageUrls: string[]) => {
 }
 
 export default function CheckoutPage() {
-
+  const { selectedCurrency } = useShop()
   const router = useRouter()
   const { items: cartItems, total, clearCart } = useCart()
   const { createOrderFromCart } = useOrder()
@@ -73,6 +75,13 @@ export default function CheckoutPage() {
       },
     ]
   })
+
+  const getPrice = (item: CartItem) => {
+    const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+    const price = Number.parseFloat(priceObject?.price || "0")
+    return price
+  }
+
   const [orderDetails, setOrderDetails] = useState({
     customerNotes: "",
     preferredDeliveryDate: "",
@@ -596,7 +605,7 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                   <div className="font-medium">
-                    S/ {(item.variant.prices[0]?.priceAsNumber * item.quantity).toFixed(2)}
+                    {selectedCurrency?.symbol} {getPrice(item).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -617,15 +626,15 @@ export default function CheckoutPage() {
             <div className="space-y-4 pt-4 border-t">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>S/ {total.toFixed(2)}</span>
+                <span>{selectedCurrency?.symbol} {total.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>IGV</span>
-                <span>S/ {tax.toFixed(2)}</span>
+                <span>{selectedCurrency?.symbol} {tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-medium text-lg">
                 <span>Total</span>
-                <span>S/ {(total + tax).toFixed(2)}</span>
+                <span>{selectedCurrency?.symbol} {(total + tax).toFixed(2)}</span>
               </div>
             </div>
           </div>
