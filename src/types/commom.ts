@@ -54,7 +54,8 @@ export enum CurrencyPosition {
     STRIPE = 'STRIPE',
     BANK_TRANSFER = 'BANK_TRANSFER',
     CASH_ON_DELIVERY = 'CASH_ON_DELIVERY',
-    OTHER = 'OTHER'
+    OTHER = 'OTHER',
+    MERCADO_PAGO = 'MERCADO_PAGO',
   }
   
   export enum ShippingMethodType {
