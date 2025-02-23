@@ -25,6 +25,7 @@ export function SiteHeader() {
   const [cartOpen, setCartOpen] = useState(false)
   const { customer, logout } = useAuth()
   const { items } = useCart()
+
   const itemCount = items.reduce((total, item) => total + item.quantity, 0)
 
   const handleLogout = async () => {

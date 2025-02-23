@@ -10,30 +10,43 @@ interface PaymentProviderContextType {
   paymentProviders: PaymentProvider[] | null
   isLoading: boolean
   error: string | null
-  setPaymentProvider: (provider: PaymentProvider) => Promise<void>
-  refreshPaymentProvider: () => Promise<void>
+  updatePaymentProvider: (providerId: string, data: Partial<PaymentProvider>) => Promise<void>
+  refreshPaymentProviders: () => Promise<void>
+  getProvidersByCurrency: (currencyCode: string) => PaymentProvider[]
 }
 
 const PaymentProviderContext = createContext<PaymentProviderContextType | undefined>(undefined)
 
 export function PaymentProviderProvider({ children }: { children: React.ReactNode }) {
-  const [paymentProviders, setPaymentProvider] = useState<PaymentProvider | null>(null)
+  const [paymentProviders, setPaymentProviders] = useState<PaymentProvider[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchPaymentProvider = useCallback(async () => {
-
-
-  useEffect(() => {
-    fetchPaymentProvider()
-  }, [fetchPaymentProvider])
-
-  const updatePaymentProvider = async (provider: PaymentProvider) => {
+  const fetchPaymentProviders = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
-      const updatedProvider = await paymentProviderService.updatePaymentProvider(provider.id, provider)
-      setPaymentProvider(updatedProvider)
+      const providers = await paymentProviderService.getPaymentProviders()
+      setPaymentProviders(providers)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchPaymentProviders()
+  }, [fetchPaymentProviders])
+
+  const updatePaymentProvider = async (providerId: string, data: Partial<PaymentProvider>) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const updatedProvider = await paymentProviderService.updatePaymentProvider(providerId, data)
+      setPaymentProviders((prevProviders) =>
+        prevProviders.map((provider) => (provider.id === providerId ? updatedProvider : provider)),
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unknown error occurred")
       throw err
@@ -42,8 +55,12 @@ export function PaymentProviderProvider({ children }: { children: React.ReactNod
     }
   }
 
-  const refreshPaymentProvider = async () => {
-    await fetchPaymentProvider()
+  const refreshPaymentProviders = async () => {
+    await fetchPaymentProviders()
+  }
+
+  const getProvidersByCurrency = (currencyCode: string) => {
+    return paymentProviders?.filter((provider) => provider.currency.code === currencyCode)
   }
 
   return (
@@ -52,8 +69,9 @@ export function PaymentProviderProvider({ children }: { children: React.ReactNod
         paymentProviders,
         isLoading,
         error,
-        setPaymentProvider: updatePaymentProvider,
-        refreshPaymentProvider,
+        updatePaymentProvider,
+        refreshPaymentProviders,
+        getProvidersByCurrency,
       }}
     >
       {children}
@@ -68,4 +86,3 @@ export function usePaymentProvider() {
   }
   return context
 }
-

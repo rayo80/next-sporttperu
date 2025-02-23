@@ -9,6 +9,7 @@ import { AddressProvider } from "@/contexts/address.context";
 import { Toaster } from "sonner";
 import { ShopProvider } from "@/contexts/shop.context";
 import { CurrencySelector } from "@/components/currency-selector";
+import { PaymentProviderProvider } from "@/contexts/payment-provider.context";
 
 export default function RootLayout({
   children,
@@ -22,14 +23,16 @@ export default function RootLayout({
           <ProductProvider>
             <CartProvider>
               <CategoryProvider>
-                <AuthProvider>
-                  <AddressProvider>
-                    <OrderProvider>
-                    {children}
-                    <Toaster />
-                    </OrderProvider>
-                  </AddressProvider>
-                </AuthProvider>
+                <PaymentProviderProvider>
+                  <AuthProvider>
+                    <AddressProvider>
+                      <OrderProvider>
+                      {children}
+                      <Toaster />
+                      </OrderProvider>
+                    </AddressProvider>
+                  </AuthProvider>
+                </PaymentProviderProvider>
               </CategoryProvider>
             </CartProvider>
           </ProductProvider>

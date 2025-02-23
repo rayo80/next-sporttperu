@@ -21,8 +21,9 @@ import Link from "next/link"
 import { CreateCustomerDto } from "@/types/customer"
 import { useOrder } from "@/contexts/order.context"
 import { mercadopagoService } from "@/api/mercado-pago"
-import { VariantPrice } from "@/types/product"
+import { VariantPrice, VariantPriceModel } from "@/types/product"
 import { useShop } from "@/contexts/shop.context"
+import { usePaymentProvider } from "@/contexts/payment-provider.context"
 
 interface FormErrors {
   email?: string
@@ -43,7 +44,6 @@ const defaultImage = (imageUrls: string[]) => {
 }
 
 export default function CheckoutPage() {
-  const { selectedCurrency } = useShop()
   const router = useRouter()
   const { items: cartItems, total, clearCart } = useCart()
   const { createOrderFromCart } = useOrder()
@@ -56,6 +56,7 @@ export default function CheckoutPage() {
   const tax = total * 0.18 // 18% IGV
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  
   const [formData, setFormData] = useState<CreateCustomerDto>({
     firstName: "",
     lastName: "",
@@ -76,8 +77,16 @@ export default function CheckoutPage() {
     ]
   })
 
-  const getPrice = (item: CartItem) => {
-    const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+  const { paymentProviders, isLoading: isLoadingProviders, getProvidersByCurrency } = usePaymentProvider()
+  const { selectedCurrency } = useShop()
+  const [selectedPaymentProvider, setSelectedPaymentProvider] = useState<string | null>(null)
+
+  // Filtrar proveedores de pago por la moneda seleccionada
+  const availablePaymentProviders = getProvidersByCurrency(selectedCurrency.code)
+
+
+  const getPrice = (item: CartItemModel) => {
+    const priceObject = item.variant.prices.find((p: VariantPriceModel) => p.currency.code === selectedCurrency?.code)
     const price = Number.parseFloat(priceObject?.price || "0")
     return price
   }
@@ -500,7 +509,31 @@ export default function CheckoutPage() {
               </p>
               <div className="space-y-4">
                 <div className="border rounded-lg overflow-hidden">
-                  <RadioGroup defaultValue="mercadopago" className="divide-y">
+                <RadioGroup
+                      value={selectedPaymentProvider || ""}
+                      onValueChange={(value) => setSelectedPaymentProvider(value)}
+                    >
+                      {availablePaymentProviders.map((provider) => (
+                        <div key={provider.id} className="p-4 border-b last:border-b-0">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value={provider.id} id={provider.id} />
+                            <Label htmlFor={provider.id} className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <span>{provider.name}</span>
+                                {/* Aquí puedes agregar iconos o información adicional del proveedor */}
+                              </div>
+                            </Label>
+                          </div>
+                          {selectedPaymentProvider === provider.id && (
+                            <div className="mt-4 pl-6">
+                              <div className="text-sm text-muted-foreground">{provider.description}</div>
+                              {/* Aquí puedes agregar campos adicionales específicos del proveedor si es necesario */}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  {/* <RadioGroup defaultValue="mercadopago" className="divide-y">
                     <div className="p-4">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="mercadopago" id="mercadopago" />
@@ -571,7 +604,7 @@ export default function CheckoutPage() {
                         <Label htmlFor="reserve">Solicitar Reserva</Label>
                       </div>
                     </div>
-                  </RadioGroup>
+                  </RadioGroup> */}
                 </div>
               </div>
             </section>

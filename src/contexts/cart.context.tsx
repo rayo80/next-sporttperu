@@ -20,7 +20,8 @@ const initialState: CartState = {
   total: 0,
 }
 
-function calculateTotal(items: CartItem[], selectedCurrency: Currency | null): number {
+function calculateTotal(items: CartItem[] = [], selectedCurrency: Currency | null): number {
+  console.log("Calculando total", items)
   return items.reduce((total, item) => {
     const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
     const price = Number.parseFloat(priceObject?.price || "0")
@@ -46,11 +47,10 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         newItems = [...state.items, { product, variant, quantity: 1 }]
       }
 
-      newState = {
+      return {
+        ...state,
         items: newItems,
-        total: 0,
       }
-      break
     }
 
     case "REMOVE_ITEM": {
@@ -60,18 +60,20 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         items: newItems,
         total: 0,
       }
-      break
+      return {
+        ...state,
+        items: newItems,
+      }
     }
 
     case "UPDATE_QUANTITY": {
       const newItems = state.items.map((item) =>
         item.product.slug === action.payload.variantId ? { ...item, quantity: action.payload.quantity } : item,
       )
-      newState = {
+      return {
+        ...state,
         items: newItems,
-        total: 0,
       }
-      break
     }
 
     case "CLEAR_CART":
@@ -84,9 +86,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     //     total: state.total, // The actual calculation will be done in the effect
     //   }
 
-    case "LOAD_CART":
-      newState = action.payload
-      break
+    // case "LOAD_CART":
+    //   console.log("Cargando carrito", action.payload)
+    //   newState = action.payload || []
+    //   console.log("newState", newState)
+    //   break
 
     case "SET_ITEMS":
       return {
@@ -113,12 +117,19 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { selectedCurrency } = useShop()
-  const [state, dispatch] = useReducer(cartReducer, initialState)
+  const [ state, dispatch ] = useReducer(cartReducer, initialState)
+  console.log("state eee", state)
+  // useEffect(() => {
+  //   const savedCart = localStorage.getItem('cart')
+  //   if (savedCart) {
+  //     dispatch({ type: "LOAD_CART", payload: JSON.parse(savedCart) })
+  //   }
+  // }, [])
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart')
+    const savedCart = localStorage.getItem("cart")
     if (savedCart) {
-      dispatch({ type: "LOAD_CART", payload: JSON.parse(savedCart) })
+      dispatch({ type: "SET_ITEMS", payload: JSON.parse(savedCart) })
     }
   }, [])
 
@@ -127,9 +138,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("cart", JSON.stringify(state.items))
   }, [state.items])
 
-  useEffect(() => {
-    dispatch({ type: "SET_ITEMS", payload: state.items }) // This will trigger a re-render with the new total
-  }, [state.items, selectedCurrency])
 
   const addItem = (product: Product, variant: ProductVariant) =>{
     console.log("Añadir variante a item", variant)
