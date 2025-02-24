@@ -111,6 +111,7 @@ interface CartContextType extends CartState {
   removeItem: (varianId: string) => void
   updateQuantity: (variantId: string, quantity: number) => void
   clearCart: () => void
+  currency: Currency
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -165,6 +166,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeItem,
         updateQuantity,
         clearCart,
+        currency: selectedCurrency,
       }}
     >
       {children}

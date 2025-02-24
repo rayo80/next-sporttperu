@@ -15,20 +15,169 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/contexts/cart.context"
 import { SiteFooter } from "@/components/site-footer"
-import { ProductVariant, VariantPriceModel } from "@/types/product"
+import { ProductVariant, VariantPrice, VariantPriceModel } from "@/types/product"
+import { useShop } from "@/contexts/shop.context"
+import jsPDF from "jspdf"
+import autoTable, { UserOptions } from "jspdf-autotable"
+import { CartItem } from "@/types/cart"
+import { get } from "http"
 
 
 export default function CartPage() {
-  const { items, total, removeItem, updateQuantity, clearCart } = useCart()
+  const { items, total, removeItem, updateQuantity, clearCart, currency} = useCart()
   const [date, setDate] = useState<Date>()
   const [specialInstructions, setSpecialInstructions] = useState("")
-
+  const { shopConfig } = useShop()
   const handleQuantityChange = (slug: string, newQuantity: number) => {
     if (newQuantity >= 0) {
       updateQuantity(slug, newQuantity)
     }
   }
+  
+  const getPrice = (item: CartItem) => {
+    const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === currency?.code)
+    const price = Number.parseFloat(priceObject?.price || "0")
+    return price
+  }
 
+  
+  const generateQuotePDF = () => {
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.width
+    const pageHeight = doc.internal.pageSize.height
+
+    // Add pink background
+    doc.setFillColor(255, 236, 239)
+    doc.rect(0, 0, pageWidth, pageHeight, "F")
+
+    // Add white rounded rectangle for content
+    doc.setFillColor(255, 255, 255)
+    doc.roundedRect(10, 10, pageWidth - 20, pageHeight - 20, 3, 3, "F")
+
+    // Title
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(24)
+    doc.text("COTIZACIÓN", pageWidth / 2, 30, { align: "center" })
+
+    // Quote number
+    doc.setFontSize(12)
+    // doc.text("00X", pageWidth / 2, 40, { align: "center" })
+
+    // Date
+    doc.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, pageWidth / 2, 50, { align: "center" })
+
+    // Client Information
+    doc.setFontSize(14)
+    doc.setFontSize(11)
+    doc.setFont("helvetica", "normal")
+    // doc.text(
+    //   [
+    //     `Nombre: ${shopConfig?.name || "Cliente"}`,
+    //     `Documento: ${shopConfig?.id || ""}`,
+    //     `Dirección: ${shopConfig?.address1 || ""}`,
+    //     `${shopConfig?.city || ""}, ${shopConfig?.province || ""}`,
+    //     `Correo: ${shopConfig?.email || ""}`,
+    //     `Teléfono: ${shopConfig?.phone || ""}`,
+    //   ],
+    //   20,
+    //   80,
+    // )
+
+    // Social Media Icons (you would need to add actual icons)
+    // doc.addImage("/instagram-icon.png", "PNG", pageWidth - 60, 70, 8, 8)
+    // doc.addImage("/web-icon.png", "PNG", pageWidth - 40, 70, 8, 8)
+
+    // Products Table
+    const tableData = items.map((item) => {
+      const variant = item.variant
+      const variantAttributes = Object.entries(variant.attributes)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ")
+      const productName = `${item.product.title}\n${variantAttributes}`
+
+      return [
+        productName,
+        item.quantity,
+        `${currency.symbol} ${(getPrice(item).toFixed(2))}`,
+        `${currency.symbol} ${(item.quantity * (getPrice(item))).toFixed(2)}`,
+      ]
+    })
+
+    const tableStyles = {
+      headStyles: { fillColor: [255, 236, 239], textColor: [0, 0, 0], fontStyle: "bold" },
+      bodyStyles: { fillColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [252, 252, 252] },
+      margin: { top: 60 },
+    }
+
+    const tableOptions: UserOptions = {
+      head: [["PRODUCTO", "CANTIDAD", "PRECIO", "TOTAL"]],
+      body: tableData,
+      ...tableStyles,
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 30, halign: "center" },
+        2: { cellWidth: 35, halign: "right" },
+        3: { cellWidth: 35, halign: "right" },
+      },
+    };
+
+    autoTable(doc, tableOptions)
+
+    // Calculate totals
+    const subtotal = total
+    const iva = total * 0.18 // 18% IGV
+    const finalTotal = subtotal + iva
+
+    // Add totals
+    const finalY = (doc as any).lastAutoTable.finalY + 10
+
+    // Create a pink box for totals
+    doc.setFillColor(255, 236, 239)
+    doc.rect(pageWidth - 90, finalY, 70, 40, "F")
+
+    doc.setFont("helvetica", "normal")
+    doc.text("Sub Total", pageWidth - 85, finalY + 10)
+    doc.text("IVA", pageWidth - 85, finalY + 20)
+    doc.setFont("helvetica", "bold")
+    doc.text("Total", pageWidth - 85, finalY + 30)
+
+    // Add amounts
+    doc.setFont("helvetica", "normal")
+    doc.text(`${currency.symbol} ${subtotal.toFixed(2)}`, pageWidth - 25, finalY + 10, { align: "right" })
+    doc.text(`${currency.symbol} ${iva.toFixed(2)}`, pageWidth - 25, finalY + 20, { align: "right" })
+    doc.setFont("helvetica", "bold")
+    doc.text(`${currency.symbol} ${finalTotal.toFixed(2)}`, pageWidth - 25, finalY + 30, { align: "right" })
+
+    // Add validity notice
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(10)
+
+
+    // Add footer with logo and contact info
+    const footerY = pageHeight - 40
+
+    // Add logo
+    doc.addImage("assets/logo.png", "PNG", 20, footerY, 40, 15)
+
+    // Add contact information
+    doc.setFontSize(9)
+    doc.text(
+      [
+        `Dirección: ${shopConfig?.address1 || ""}`,
+        `${shopConfig?.city || ""}, ${shopConfig?.province || ""}`,
+        `Correo: ${shopConfig?.email || ""}`,
+        `Teléfono: ${shopConfig?.phone || ""}`,
+      ],
+      pageWidth - 20,
+      footerY,
+      { align: "right" },
+    )
+
+    // Save the PDF
+    doc.save("cotizacion.pdf")
+  }
+  
   function getPricesAsModels(variant: ProductVariant): VariantPriceModel[] {
     return variant.prices.map((p) => VariantPriceModel.fromInterface(p));
   }
@@ -72,8 +221,9 @@ export default function CartPage() {
                 <tbody className="divide-y">
                   {items.map((item) => {
                     const priceModels = getPricesAsModels(item.variant);
-                    const price = priceModels[0]?.priceAsNumber || 0;
+                    const price = getPrice(item)
                     const itemTotal = price * item.quantity
+                    
 
                     return (
                       <tr key={item.variant.id} className="bg-white">
@@ -93,7 +243,7 @@ export default function CartPage() {
                             <p className="text-sm text-muted-foreground">{item.product.variants[0].color}</p>
                           )}
                         </td>
-                        <td className="p-4">S/. {price.toFixed(2)}</td>
+                        <td className="p-4">{currency?.symbol} {price.toFixed(2)}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <Button
@@ -123,7 +273,7 @@ export default function CartPage() {
                             </Button>
                           </div>
                         </td>
-                        <td className="p-4">S/. {itemTotal.toFixed(2)}</td>
+                        <td className="p-4">{currency?.symbol} {itemTotal.toFixed(2)}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <Button variant="ghost" size="icon" onClick={() => removeItem(item.product.slug)}>
@@ -146,8 +296,8 @@ export default function CartPage() {
                 <Link href="/">CONTINUAR COMPRANDO</Link>
               </Button>
               <div className="flex gap-4">
-                <Button variant="outline" onClick={handleUpdateCart}>
-                  ACTUALIZAR CARRITO
+                <Button variant="outline" onClick={generateQuotePDF}>
+                  GENERAR COTIZACIÓN
                 </Button>
                 <Button variant="outline" onClick={clearCart}>
                   LIMPIAR CARRITO
