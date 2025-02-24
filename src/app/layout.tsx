@@ -22,8 +22,8 @@ export default function RootLayout({
       <body className="w-full container-full ">
         <ShopProvider>
           <ProductProvider>
-            <CartProvider>
-              <CategoryProvider>
+            <CategoryProvider>
+              <CartProvider>
                 <CollectionProvider>
                   <PaymentProviderProvider>
                     <AuthProvider>
@@ -36,8 +36,9 @@ export default function RootLayout({
                     </AuthProvider>
                   </PaymentProviderProvider>
                 </CollectionProvider>
-              </CategoryProvider>
-            </CartProvider>
+              </CartProvider>
+            </CategoryProvider>
+            
           </ProductProvider>
         </ShopProvider>
       </body>

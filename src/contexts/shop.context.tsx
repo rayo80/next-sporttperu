@@ -10,7 +10,7 @@ interface ShopContextType {
   shopConfig: ShopConfig | null
   isLoading: boolean
   error: string | null
-  selectedCurrency: Currency
+  selectedCurrency: Currency | null
   setSelectedCurrency: (currency: Currency) => void
 }
 

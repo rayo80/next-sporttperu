@@ -24,6 +24,7 @@ import { mercadopagoService } from "@/api/mercado-pago"
 import { VariantPrice, VariantPriceModel } from "@/types/product"
 import { useShop } from "@/contexts/shop.context"
 import { usePaymentProvider } from "@/contexts/payment-provider.context"
+import { PaymentProvider, PaymentProviderType } from "@/types/payment-provider"
 
 interface FormErrors {
   email?: string
@@ -49,7 +50,6 @@ export default function CheckoutPage() {
   const { createOrderFromCart } = useOrder()
   const itemModels = cartItems.map((i) => new CartItemModel(i));
   const { customer, isLoading: isAuthLoading } = useAuth()
-  const { addresses, createAddress, getAddresses, updateAddress, isLoading: isAddressLoading } = useAddress()
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
@@ -79,11 +79,19 @@ export default function CheckoutPage() {
 
   const { paymentProviders, isLoading: isLoadingProviders, getProvidersByCurrency } = usePaymentProvider()
   const { selectedCurrency } = useShop()
-  const [selectedPaymentProvider, setSelectedPaymentProvider] = useState<string | null>(null)
+  const [ selectedPaymentIdProvider, setSelectedPaymentIdProvider] = useState<string | null>(null)
 
   // Filtrar proveedores de pago por la moneda seleccionada
-  const availablePaymentProviders = getProvidersByCurrency(selectedCurrency.code)
+  const availablePaymentProviders = getProvidersByCurrency(selectedCurrency?.code)
 
+  const selectPaymentById = (selectedPaymentIdProvider: string) => { 
+    console.log("selectedPaymentIdProvider", selectedPaymentIdProvider)
+    setSelectedPaymentIdProvider(selectedPaymentIdProvider)
+    const provider = availablePaymentProviders.find((p) => p.id === selectedPaymentIdProvider)
+    if (provider) {
+      setPaymentMethod(provider)
+    } 
+  }
 
   const getPrice = (item: CartItemModel) => {
     const priceObject = item.variant.prices.find((p: VariantPriceModel) => p.currency.code === selectedCurrency?.code)
@@ -95,7 +103,7 @@ export default function CheckoutPage() {
     customerNotes: "",
     preferredDeliveryDate: "",
   })
-  const [paymentMethod, setPaymentMethod] = useState<string>("mercadopago")
+  const [paymentMethod, setPaymentMethod] = useState<PaymentProvider | null>(null)
 
   const validateField = useCallback(
     (name: string, value: string): string | undefined => {
@@ -187,7 +195,9 @@ export default function CheckoutPage() {
     }
 
     try {
-      if (paymentMethod === "mercadopago") {
+      // console.log("paymentMethod", paymentMethod?.name)
+      // console.log("selectedPaymentProvider", selectedPaymentIdProvider)
+      if (paymentMethod?.type === PaymentProviderType.MERCADO_PAGO) {
         // Create MercadoPago preference
         const itemsPref = cartItems.map((item) => ({
           id: item.variant.id,
@@ -202,7 +212,6 @@ export default function CheckoutPage() {
         )
         
         // Redirect to MercadoPago payment page
-        console.log("redirigeindomeeeeeeeeeeeeee")
         window.location.href = init_point
       } else {
         // Proceed with other payment methods (create order directly)
@@ -253,7 +262,7 @@ export default function CheckoutPage() {
                   <Input
                     type="email"
                     name="email"
-                    value={formData.email}
+                    value={customer ? customer.email : formData.email}
                     onChange={handleInputChange}
                     placeholder="Email"
                     className={`w-full ${formErrors.email ? "border-red-500" : ""}`}
@@ -382,7 +391,7 @@ export default function CheckoutPage() {
                       id="firstName"
                       name="firstName"
                       type="text"
-                      value={formData.firstName}
+                      value={customer ? customer.firstName : formData.firstName}
                       onChange={handleInputChange}
                       required
                       disabled={!!customer}
@@ -394,7 +403,7 @@ export default function CheckoutPage() {
                       id="lastName"
                       name="lastName"
                       type="text"
-                      value={formData.lastName}
+                      value={customer ? customer.lastName : formData.lastName}
                       onChange={handleInputChange}
                       required
                       className={formErrors.lastName ? "border-red-500" : ""}
@@ -510,8 +519,8 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 <div className="border rounded-lg overflow-hidden">
                 <RadioGroup
-                      value={selectedPaymentProvider || ""}
-                      onValueChange={(value) => setSelectedPaymentProvider(value)}
+                      value={selectedPaymentIdProvider || ""}
+                      onValueChange={(value) => selectPaymentById(value)}
                     >
                       {availablePaymentProviders.map((provider) => (
                         <div key={provider.id} className="p-4 border-b last:border-b-0">
@@ -524,7 +533,7 @@ export default function CheckoutPage() {
                               </div>
                             </Label>
                           </div>
-                          {selectedPaymentProvider === provider.id && (
+                          {selectedPaymentIdProvider === provider.id && (
                             <div className="mt-4 pl-6">
                               <div className="text-sm text-muted-foreground">{provider.description}</div>
                               {/* Aquí puedes agregar campos adicionales específicos del proveedor si es necesario */}
