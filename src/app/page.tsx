@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { useCategories } from "@/contexts/categories.context"
+import { useCollections } from "@/contexts/collections.context"
 import { useProducts } from "@/contexts/product.context"
 import { Product } from "@/types/product"
 import Link from "next/link"
@@ -31,22 +32,20 @@ const sliderRowBreakpoints = {
 }
 
 export default function Home() {
-  const { products, isLoading, error, getProducts } = useProducts();
+  const { availableProducts: products, isLoading, error, getProducts } = useProducts();
   const { items: categories} = useCategories();
-  const maderaCategory = 1;
+  const { items: collections} = useCollections();
+  const firstCollection = 0;
   const jebeCategory = 3;
+  const summerCollection = collections?.[firstCollection] ?? null;
 
-  const paletasProducts = useMemo(() => {
-    if (!maderaCategory) return products;
-    if (maderaCategory < 0 || maderaCategory >= categories.length) {
-      return products; // Evita acceder a un índice fuera de rango
-    }
-  
-    const selectedCategory = categories[maderaCategory];
+  const collectionProducts = useMemo(() => {
+    if (!summerCollection) return products;
+    const selected = summerCollection;
     return products.filter(product =>
-      product.categories.some((cat: any) => cat.id === selectedCategory.id)
+      product.collections.some((val: any) => val.id === selected.id)
     );
-  }, [products, categories]);
+  }, [products, collections]);
 
   const jebesProducts = useMemo(() => {
     if (!jebeCategory) return products;
@@ -83,25 +82,29 @@ export default function Home() {
             <ProductSlider products={jebesProducts} breakpoints={sliderRowBreakpoints} />
             <div className="flex justify-center">
                 <Button asChild variant="outline" className="rounded-full px-8">
-                    <Link href="/collections/gomas">Explora</Link>
+                    <Link href="/categories/gomas">Explora</Link>
                 </Button>
             </div>
           </div>
         </section>
-        <section className="py-12 ">
-          <div className="container-full px-4">
-            <h2 className="text-4xl font-bold text-center mb-8">
-              <span className="font-normal">Maderas</span>{" "}
-              <span className="font-bold">Butterfly</span>
-            </h2>
-            <ProductSlider products={paletasProducts} breakpoints={sliderRowBreakpoints} />
-            <div className="flex justify-center">
-                <Button asChild variant="outline" className="rounded-full px-8">
-                    <Link href="/collections/maderas">Explora</Link>
-                </Button>
+        {
+          summerCollection && (
+            <section className="py-12 ">
+            <div className="container-full px-4">
+              <h2 className="text-4xl font-bold text-center mb-8">
+                <span className="font-normal">{summerCollection.title}</span>{" "}
+                <span className="font-bold">{summerCollection.description}</span>
+              </h2>
+              <ProductSlider products={collectionProducts} breakpoints={sliderRowBreakpoints} />
+              <div className="flex justify-center">
+                  <Button asChild variant="outline" className="rounded-full px-8">
+                      <Link href="/collections/maderas">Explora</Link>
+                  </Button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+          )
+        }
         <PromoBanners />
         <SportsClothingSection />
       </main>

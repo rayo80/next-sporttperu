@@ -12,7 +12,7 @@ export function CategoriesSidebar() {
           {categories.map((category) => (
             <li key={category.slug}>
               <Link
-                href={"/collections/"+category.slug}
+                href={"/categories/"+category.slug}
                 className="block px-4 py-2 hover:bg-accent text-sm"
               >
                 {category.name}

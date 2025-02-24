@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null)
     try {
       const customer = await authService.register(userData)
-      setCustomer(customer)
+      // setCustomer(customer)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during registration")
       throw err

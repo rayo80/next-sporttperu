@@ -103,8 +103,9 @@ export interface Product {
     vendor: string
     status: "DRAFT" | "PUBLISHED"
     categories: string[]
-    collectionIds: string[]
+    collections: string[]
     imageUrls: string[]
+    allowBackorder: boolean,
     sku: string
     weightValue: number
     weightUnit: string

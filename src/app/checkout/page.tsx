@@ -519,7 +519,7 @@ export default function CheckoutPage() {
                             <RadioGroupItem value={provider.id} id={provider.id} />
                             <Label htmlFor={provider.id} className="flex-1">
                               <div className="flex items-center justify-between">
-                                <span>{provider.name}</span>
+                                <span>{provider.name} {provider.type}</span>
                                 {/* Aquí puedes agregar iconos o información adicional del proveedor */}
                               </div>
                             </Label>

@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import { ShopProvider } from "@/contexts/shop.context";
 import { CurrencySelector } from "@/components/currency-selector";
 import { PaymentProviderProvider } from "@/contexts/payment-provider.context";
+import { CollectionProvider } from "@/contexts/collections.context";
 
 export default function RootLayout({
   children,
@@ -23,16 +24,18 @@ export default function RootLayout({
           <ProductProvider>
             <CartProvider>
               <CategoryProvider>
-                <PaymentProviderProvider>
-                  <AuthProvider>
-                    <AddressProvider>
-                      <OrderProvider>
-                      {children}
-                      <Toaster />
-                      </OrderProvider>
-                    </AddressProvider>
-                  </AuthProvider>
-                </PaymentProviderProvider>
+                <CollectionProvider>
+                  <PaymentProviderProvider>
+                    <AuthProvider>
+                      <AddressProvider>
+                        <OrderProvider>
+                        {children}
+                        <Toaster />
+                        </OrderProvider>
+                      </AddressProvider>
+                    </AuthProvider>
+                  </PaymentProviderProvider>
+                </CollectionProvider>
               </CategoryProvider>
             </CartProvider>
           </ProductProvider>

@@ -50,9 +50,9 @@ const filterOptions = {
   ],
 }
 
-export default function CollectionPage({ params }: { params: { slug: string } }) {
+export default function CategoriesPage({ params }: { params: { slug: string } }) {
   const rparams = useParams<{slug: string }>()
-  const { products, isLoading, error, getProducts } = useProducts()
+  const { availableProducts: products, isLoading, error, getProducts } = useProducts()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState({
@@ -67,6 +67,9 @@ export default function CollectionPage({ params }: { params: { slug: string } })
   const category = getCategorySlug(rparams.slug)
 
   const filteredProducts = useMemo(() => {
+    if (!category) {
+      return products
+    }
     return products.filter(product =>
       product.categories.some((cat: any) => cat.slug === rparams.slug)
     );

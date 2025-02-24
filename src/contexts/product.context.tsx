@@ -26,6 +26,7 @@ export interface CreateProductDto {
 
 export interface ProductContextType {
   products: Product[];
+  availableProducts: Product[];
   isLoading: boolean;
   error: string | null;
   fetchProducts: () => Promise<void>;
@@ -71,6 +72,9 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     setProducts(data);
   };
 
+
+
+
   const addProduct = async (newProduct: CreateProductDto) => {
     try {
       setError(null);
@@ -114,10 +118,19 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     return products.find((product) => product.slug === slug);
   };
 
+  const getAvailableProducts = () => {
+    return products.filter((product) => {
+      const totalStock = product.variants.reduce((sum, variant) => sum + variant.inventoryQuantity, 0)
+      return totalStock > 0 || product.allowBackorder
+    })
+  }
+  const availableProducts = getAvailableProducts()
+
   return (
     <ProductContext.Provider
       value={{
         products,
+        availableProducts,
         isLoading,
         error,
         fetchProducts,

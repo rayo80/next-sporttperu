@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth.context"
+import { SiteHeader } from "@/components/site-header"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -36,6 +37,8 @@ export default function LoginPage() {
   }
 
   return (
+    <>
+    <SiteHeader />
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
@@ -80,5 +83,6 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
+    </>
   )
 }

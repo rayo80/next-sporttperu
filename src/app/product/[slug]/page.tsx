@@ -3,7 +3,9 @@
 import { useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Facebook, Twitter, Share2, Ruler, Truck, HelpCircle, Minus, Plus, Heart, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Facebook, Twitter, Share2, Ruler, Truck, HelpCircle, 
+  Minus, Plus, Heart, RefreshCw, ChevronLeft, ChevronRight,
+  PhoneIcon as WhatsApp } from 'lucide-react'
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -20,13 +22,13 @@ import { cn } from "@/lib/utils"
 import { useProducts } from "@/contexts/product.context"
 import { Product, ProductVariant, VariantPrice } from "@/types/product"
 import { useCart } from "@/contexts/cart.context"
-import {use} from "react"
 
 import { useParams } from 'next/navigation'
 import { SiteFooter } from "@/components/site-footer"
 import { toast } from "sonner"
 import { CurrencySelector } from "@/components/currency-selector"
 import { useShop } from "@/contexts/shop.context"
+import { useRouter } from "next/navigation"
 interface ColorOption {
   id: string
   label: string
@@ -53,10 +55,14 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   const [selectedAttributes, setSelectedAttributes] = useState<{ 
     [key: string]: string }>({})
   const rparams = useParams<{slug: string }>()
-  const { addItem } = useCart()
+  const { addItem, clearCart, updateQuantity} = useCart()
   const [selectedColor, setSelectedColor] = useState<string>("pink")
   const [quantity, setQuantity] = useState(1)
   const { getProductSlug } = useProducts()
+
+  //Actions
+  const { shopConfig } = useShop()
+  const router = useRouter()
 
   // Image selector
   const thumbnailsRef = useRef<HTMLDivElement>(null)
@@ -184,6 +190,38 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
       toast.error("Por favor selecciona todas las opciones")
     }
   }
+
+  const handleBuyNow = () => {
+    if (product && selectedVariant) {
+      clearCart()
+      addItem(product, selectedVariant)
+      updateQuantity(selectedVariant.id, quantity)
+      router.push("/checkout")
+    } else {
+      toast.error("Por favor selecciona todas las opciones")
+    }
+  }
+
+  const handleWhatsAppInquiry = () => {
+    if (!shopConfig || !product) return
+    console.log("phonme", shopConfig.phone)
+    const phoneNumber = shopConfig.phone
+    const message = encodeURIComponent(
+      `Hola, me gustaría obtener más información sobre el producto "${product.title}" 
+      ((${window.location.href})`,
+    )
+    // ${process.env.NEXT_PUBLIC_API}/product/${product.slug}
+    let number = phoneNumber.replace(/[^\w\s]/gi, "").replace(/ /g, "");
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=${number}&text=${message}`
+    window.open(whatsappUrl, "_blank")
+  }
+  
+  const stripHtmlTags = (html: string) => {
+    const tmp = document.createElement("DIV")
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || ""
+  }
+
   return (
     <>
       <SiteHeader />
@@ -319,8 +357,8 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
               </div>
             )}
 
-            <p className="text-muted-foreground text-sm">{product?.description.slice(0, 400) + "..." || 
-            "Descripción del producto no disponible."}</p>
+            <p className="text-muted-foreground text-sm">
+              {product?.description ? stripHtmlTags(product.description).slice(0, 400) + "..." : "Descripción del producto no disponible."}</p>
 
             <ul>
               <li className="flex items-center border">
@@ -331,7 +369,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
               </li>
             </ul>
             {/* Variant Selectors */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               {Object.entries(attributeGroups).map(([type, group]) => (
                 <div key={type} className="space-y-2">
                   <Label className="text-base">{type}:</Label>
@@ -363,7 +401,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
             </div>
             <div className="space-y-4">
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <div className="flex items-center border rounded-md">
                   <Button
                     variant="ghost"
@@ -390,26 +428,52 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                   onClick={handleAddToCart}
                   disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
                 >
-                  AÑADIR A CARRITO
+                  Añadir al Carrito
+                </Button>
+                <Button
+                  className="w-full bg-pink-500 hover:bg-pink-600"
+                  onClick={handleBuyNow}
+                  disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
+                >
+                  Comprar ahora
                 </Button>
               </div>
-              <Button className="w-full bg-pink-500 hover:bg-pink-600">
+              {/* <Button
+                className="w-full bg-pink-500 hover:bg-pink-600"
+                onClick={handleBuyNow}
+                disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
+              >
                 Comprar ahora
-              </Button>
+              </Button> */}
 
-              <div className="flex items-center justify-center gap-6 py-4">
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-6 py-2">
+                {/* <Button variant="ghost" size="sm" className="text-muted-foreground">
                   <Ruler className="h-4 w-4 mr-2" />
                   Guía De Tamaño
                 </Button>
                 <Button variant="ghost" size="sm" className="text-muted-foreground">
                   <Truck className="h-4 w-4 mr-2" />
                   Envío
-                </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <HelpCircle className="h-4 w-4 mr-2" />
+                </Button> */}
+                <Button variant="ghost" size="sm" 
+                  onClick={handleWhatsAppInquiry}
+                  className="text-muted-foreground">
+                  <Image
+                    src="/assets/whatsapp.svg"
+                    alt="Amazon"
+                    width={40}
+                    height={24}
+                    className="h-6 w-auto"
+                  />
                   Pregunta Sobre Este Producto
                 </Button>
+                {/* <Button variant="ghost" size="sm" 
+                  className="text-muted-foreground bg-green-500 hover:bg-green-600 text-white " onClick={handleWhatsAppInquiry}>
+                  <WhatsApp className="h-4 w-4 mr-2" />
+                  Pregunta Sobre Este Producto
+                </Button> */}
               </div>
 
               <div className="flex items-center gap-4 border-t pt-4">
