@@ -18,14 +18,14 @@ import { useEffect, useMemo, useState } from "react"
 
 
 const sliderBreakpoints = {
-  sm: 2,    // 2 cards for mobile (up to 639px)
+  sm: 1,    // 2 cards for mobile (up to 639px)
   md: 2,  // 2 cards for small tablets (640px - 767px)
   lg: 3,  // 3 cards for tablets (768px - 1023px)
   xl: 3  // 4 cards for large desktop (1280px and above)
 }
 
 const sliderRowBreakpoints = {
-  sm: 2,    // 2 cards for mobile (up to 639px)
+  sm: 1,    // 2 cards for mobile (up to 639px)
   md: 2,  // 2 cards for small tablets (640px - 767px)
   lg: 3,  // 3 cards for tablets (768px - 1023px)
   xl: 5  // 4 cards for large desktop (1280px and above)
@@ -35,17 +35,13 @@ export default function Home() {
   const { availableProducts: products, isLoading, error, getProducts } = useProducts();
   const { items: categories} = useCategories();
   const { items: collections} = useCollections();
-  const firstCollection = 0;
+ 
   const jebeCategory = 3;
-  const summerCollection = collections?.[firstCollection] ?? null;
+ 
+  const featuredCollections = collections?.filter((col) => col.isFeatured) || [];
 
-  const collectionProducts = useMemo(() => {
-    if (!summerCollection) return products;
-    const selected = summerCollection;
-    return products.filter(product =>
-      product.collections.some((val: any) => val.id === selected.id)
-    );
-  }, [products, collections]);
+  
+ 
 
   const jebesProducts = useMemo(() => {
     if (!jebeCategory) return products;
@@ -63,54 +59,47 @@ export default function Home() {
     <>
       <SiteHeader />
       <HeroSlider />
-      <main className="container-full px-10 py-10">
-        <div className="flex gap-6 flex-wrap p-auto justify-center">
-          <div className="w-full md:w-[20%]">
+      <main className=" ">
+        <div className="container-section py-8 md:pt-16  ">
+          <div className="content-section flex   flex-wrap  justify-between mb-8">
+          <div className="w-full md:w-[25%] ">
             <CategoriesSidebar />
           </div>
-          <div className="w-full md:w-[75%]">
+          <div className="w-full md:w-[75%] pt-10 pl-0 md:pl-5 md:pt-0">
             <ProductSlider products={products} breakpoints={sliderBreakpoints} />
           </div>
         </div>
-        {/* Jebe Section */}
-        <section className="py-12 ">
-          <div className="container-full px-4">
-            <h2 className="text-4xl font-bold text-center mb-8">
-              <span className="font-normal">Jebe</span>{" "}
-              <span className="font-bold">Butterfly</span>
-            </h2>
-            <ProductSlider products={jebesProducts} breakpoints={sliderRowBreakpoints} />
-            <div className="flex justify-center">
-                <Button asChild variant="outline" className="rounded-full px-8">
-                    <Link href="/categories/gomas">Explora</Link>
-                </Button>
-            </div>
-          </div>
-        </section>
-        {
-          summerCollection && (
-            <section className="py-12 ">
-            <div className="container-full px-4">
-              <h2 className="text-4xl font-bold text-center mb-8">
-                <span className="font-normal">{summerCollection.title}</span>{" "}
-                <span className="font-bold">{summerCollection.description}</span>
-              </h2>
-              <ProductSlider products={collectionProducts} breakpoints={sliderRowBreakpoints} />
-              <div className="flex justify-center">
-                  <Button asChild variant="outline" className="rounded-full px-8">
-                      <Link href="/collections/maderas">Explora</Link>
+      </div>
+ 
+ 
+       {/* Featured Collections */}
+       {featuredCollections.map((collection) => {
+          const collectionProducts = products.filter((product) =>
+            product.collections.some((col) => col.id === collection.id)
+          );
+
+          return (
+            <section key={collection.id} className=" container-section pb-8 md:py-8">
+              <div className="content-section">
+                <h2 className="text-3xl font-semibold text-center mb-12">
+                   {collection.title} {" "}
+                </h2>
+                <ProductSlider products={collectionProducts} breakpoints={sliderRowBreakpoints} />
+                <div className="flex justify-center">
+                  <Button asChild variant="outline" className="rounded-full transition-all mt-8 md:mt-16 px-8 bg-gradient-to-tr from-white to-gray-200 shadow-md shadow-slate-100  hover:to-gray-300 ">
+                    <Link href={`/categories/all`}>Explora</Link>
                   </Button>
+                </div>
               </div>
-            </div>
-          </section>
-          )
-        }
+            </section>
+          );
+        })}
+
         <PromoBanners />
         <SportsClothingSection />
       </main>
-      <CurrencySelector/>
+      <CurrencySelector />
       <SiteFooter />
     </>
-  )
+  );
 }
-

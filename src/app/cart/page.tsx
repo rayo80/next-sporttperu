@@ -110,19 +110,19 @@ export default function CartPage() {
       margin: { top: 60 },
     }
 
-    const tableOptions: UserOptions = {
-      head: [["PRODUCTO", "CANTIDAD", "PRECIO", "TOTAL"]],
-      body: tableData,
-      ...tableStyles,
-      columnStyles: {
-        0: { cellWidth: 80 },
-        1: { cellWidth: 30, halign: "center" },
-        2: { cellWidth: 35, halign: "right" },
-        3: { cellWidth: 35, halign: "right" },
-      },
-    };
+    // const tableOptions: UserOptions = {
+    //   head: [["PRODUCTO", "CANTIDAD", "PRECIO", "TOTAL"]],
+    //   body: tableData,
+    //   ...tableStyles,
+    //   columnStyles: {
+    //     0: { cellWidth: 80 },
+    //     1: { cellWidth: 30, halign: "center" },
+    //     2: { cellWidth: 35, halign: "right" },
+    //     3: { cellWidth: 35, halign: "right" },
+    //   },
+    // };
 
-    autoTable(doc, tableOptions)
+    // autoTable(doc, tableOptions)
 
     // Calculate totals
     const subtotal = total
@@ -194,8 +194,9 @@ export default function CartPage() {
   return (
     <>
       <SiteHeader />
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <h1 className="text-3xl font-bold mb-8">Carrito de Compras</h1>
+      <main className="container-section py-16">
+        <div className="content-section ">
+        <h2 className="text-3xl font-medium mb-8">Carrito de Compras</h2>
 
         {items.length === 0 ? (
           <div className="text-center py-12">
@@ -239,8 +240,8 @@ export default function CartPage() {
                         </td>
                         <td className="p-4">
                           <h3 className="font-medium">{item.product.title}</h3>
-                          {item.product.variants[0]?.color && (
-                            <p className="text-sm text-muted-foreground">{item.product.variants[0].color}</p>
+                          {item.product.variants[0]?.title && (
+                            <p className="text-sm text-muted-foreground">{item.product.variants[0].title}</p>
                           )}
                         </td>
                         <td className="p-4">{currency?.symbol} {price.toFixed(2)}</td>
@@ -361,6 +362,7 @@ export default function CartPage() {
             </div>
           </>
         )}
+        </div>
       </main>
       <SiteFooter />
     </>

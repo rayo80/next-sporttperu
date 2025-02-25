@@ -1,3 +1,4 @@
+import { Category } from "./category"
 
 export interface Currency {
   id: string
@@ -96,27 +97,25 @@ export class ProductVariantModel {
 }
 
 export interface Product {
+    createdAt: string | number | Date
     id: string;
     title: string
     description: string
     slug: string
     vendor: string
     status: "DRAFT" | "PUBLISHED"
-    categories: string[]
-    collections: string[]
+    categories: Category[]
+    collections: Collection[]
     imageUrls: string[]
     allowBackorder: boolean,
     sku: string
     weightValue: number
     weightUnit: string
-    price?: number //////////
+ 
     image?: string //////////
     name?: string //////////
-    prices: {
-      currencyId: string
-      price: number
-    }[]
-    variants: any[] // You might want to define a more specific type for variants
+ 
+    variants: ProductVariant[] // You might want to define a more specific type for variants
   }
 
 export interface  CreateProductDto {

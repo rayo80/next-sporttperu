@@ -3,26 +3,26 @@ import Link from "next/link"
 
 const promos = [
   {
-    image: "/assets/prom1.webp",
+    image: "/assets/prom1.png",
     url: "#",
-    gradient: "from-blue-400 to-blue-600",
+    gradient: " ",
   },
   {
-    image: "/assets/prom2.webp",
-    url: "#",
-    gradient: "from-teal-400 to-blue-600",
+    image: "/assets/prom2.jpg",
+    url: "/product/dignics-05",
+    gradient: " ",
   },
   {
-    image: "/assets/prom3.webp",
-    url: "#",
-    gradient: "from-blue-300 to-purple-600",
+    image: "/assets/prom3.png",
+    url: "/product/tenergy-05-fx",
+    gradient: " ",
   },
 ]
 
 export function PromoBanners() {
   return (
-    <section className="container mx-auto px-2 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
+    <section className="container-section py-12">
+      <div className="content-section grid grid-cols-1 md:grid-cols-3 gap-1">
         {promos.map((promo, index) => (
           <Link key={index} href={promo.url} className=" rounded-sm block group relative overflow-hidden aspect-[4/4]">
             {/* <div className={`absolute  inset-0 bg-gradient-to-br ${promo.gradient} opacity-90`} /> */}

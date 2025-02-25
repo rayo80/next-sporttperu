@@ -99,4 +99,16 @@ html, body, h1 {
   body {
     @apply bg-background text-foreground;
   }
+
+}
+
+@layer components{
+  .container-section {
+    @apply px-6 lg:px-8 xl:px-16;
+  }
+  
+  .content-section {
+    @apply max-w-screen-2xl w-full mx-auto 
+  }
+
 }

@@ -1,4 +1,5 @@
 type Collection = {
+  isFeatured: boolean;
   id: string;
   title: string;
   description: string;

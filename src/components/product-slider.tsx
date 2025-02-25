@@ -6,17 +6,6 @@ import { Button } from "@/components/ui/button"
 import { ProductCard } from "./product-card"
 import { Product } from "@/types/product"
 
-// interface Product {
-//   title: string
-//   price: number
-//   originalPrice?: number
-//   images: string[]
-//   stockAvailable?: number
-//   isOutOfStock?: boolean
-//   isOnSale?: boolean
-//   discount?: number
-// }
-
 interface ProductSliderProps {
   products: Product[]
   productsPerView?: number
@@ -26,7 +15,7 @@ interface ProductSliderProps {
   compact?: boolean
 }
 
-export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 3, xl: 4 }, compact = false }  : ProductSliderProps) {
+export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 4, xl: 4 }, compact = false }  : ProductSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
@@ -35,7 +24,6 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 3, x
   const [productsPerView, setProductsPerView] = useState(breakpoints.sm || 1)
 
   const nextSlide = () => {
-    console.log("per view", productsPerView)
     setCurrentIndex((prev) => 
       prev + 1 >= products.length - productsPerView + 1 ? 0 : prev + 1
     )
@@ -50,13 +38,13 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 3, x
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
     setStartX(e.pageX - (sliderRef.current?.offsetLeft || 0))
-    setScrollLeft(currentIndex * (sliderRef.current?.offsetWidth || 0) / productsPerView)
+    setScrollLeft(currentIndex * ((sliderRef.current?.offsetWidth || 0) / productsPerView))
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true)
     setStartX(e.touches[0].pageX - (sliderRef.current?.offsetLeft || 0))
-    setScrollLeft(currentIndex * (sliderRef.current?.offsetWidth || 0) / productsPerView)
+    setScrollLeft(currentIndex * ((sliderRef.current?.offsetWidth || 0) / productsPerView))
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -104,8 +92,7 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 3, x
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth
-      console.log("width", width)
-      let newProductsPerView = breakpoints.sm || 1 // Default to 1 if sm is not defined
+      let newProductsPerView = breakpoints.sm || 1
 
       if (width >= 1280) { // xl
         newProductsPerView = breakpoints.xl || 4
@@ -120,18 +107,14 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 3, x
       setProductsPerView(newProductsPerView)
     }
 
-    handleResize() // Call once to set initial state
+    handleResize() // Estado inicial
     window.addEventListener('resize', handleResize)
 
     return () => window.removeEventListener('resize', handleResize)
   }, [breakpoints])
 
-
-
-
-
   return (
-    <div className="relative">
+    <div className="relative   overflow-hidden">
       <div 
         ref={sliderRef}
         className="overflow-hidden touch-pan-x"
@@ -150,13 +133,8 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 3, x
             <div 
               key={idx} 
               className="flex-shrink-0 px-2"
-              // className={`w-full sm:w-1/2 flex-shrink-0 px-2 ${
-              //   productsPerView === 3 ? 'md:w-1/3' : 
-              //   productsPerView === 4 ? 'md:w-1/4' : 
-              //   productsPerView === 5 ? 'md:w-1/5' : ''
-              // }`}
               style={{ width: `${100 / productsPerView}%`}}
-              >
+            >
               <ProductCard product={product} compact={compact} />
             </div>
           ))}
@@ -165,20 +143,19 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 3, x
       <Button
         variant="outline"
         size="icon"
-        className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white shadow-md hover:bg-gray-100"
+        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-md"
         onClick={prevSlide}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-5 w-5 text-gray-800" />
       </Button>
       <Button
         variant="outline"
         size="icon"
-        className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white shadow-md hover:bg-gray-100"
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-md"
         onClick={nextSlide}
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-5 w-5 text-gray-800" />
       </Button>
     </div>
   )
 }
-
