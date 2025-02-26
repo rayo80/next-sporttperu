@@ -98,7 +98,7 @@ export default function Home() {
         <PromoBanners />
         <SportsClothingSection />
       </main>
-      <CurrencySelector />
+ 
       <SiteFooter />
     </>
   );

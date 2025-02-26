@@ -18,6 +18,7 @@ import { CartDrawer } from "./cart-drawer"
 import { useCategories } from "@/contexts/categories.context"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth.context"
+import { CurrencySelector } from "./currency-selector"
 
 export function SiteHeader() {
   const { items: shopCategories } = useCategories()
@@ -68,6 +69,8 @@ export function SiteHeader() {
 
           {/* Íconos y menú */}
           <div className="flex items-center gap-4">
+                  <CurrencySelector />
+            
             <div className="relative">
               <Button 
                 variant="ghost" 
@@ -148,7 +151,7 @@ export function SiteHeader() {
               <NavigationMenuList className="gap-5">
                 <NavigationMenuItem>
                   <Link href="/" legacyBehavior passHref>
-                    <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white">
+                    <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-base font-medium transition-colors hover:bg-gray-800 hover:text-white">
                       Inicio
                     </NavigationMenuLink>
                   </Link>
