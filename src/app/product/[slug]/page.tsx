@@ -216,18 +216,21 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
     window.open(whatsappUrl, "_blank")
   }
   
-  const stripHtmlTags = (html: string) => {
-    const tmp = document.createElement("DIV")
-    tmp.innerHTML = html
-    return tmp.textContent || tmp.innerText || ""
-  }
+  const sanitizeHtml = (html: string): string => {
+    // Remueve etiquetas <script> y su contenido (esto es solo una sanitización mínima)
+    return html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+  };
+  
+   
+  
 
   return (
     <>
       <SiteHeader />
-      <main className="container px-4 py-8">
-        <div className="mb-8">
-          <Breadcrumb>
+      <main className="">
+        <div className="container-section py-8 md:py-16 bg-[url('/bread.webp')] bg-cover bg-center">
+          <div className="content-section flex justify-center">
+          <Breadcrumb className="flex flex-center">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
@@ -237,18 +240,19 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/shop/gomas">Gomas</Link>
+                  <Link href="/shop/gomas">{product?.categories[0].name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Tenergy 05 FX</BreadcrumbPage>
+                <BreadcrumbPage>{product?.title}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          </div>
         </div>
-
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="container-section py-16">
+        <div className="content-section grid lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square relative border rounded-lg overflow-hidden">
@@ -357,8 +361,15 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
               </div>
             )}
 
-            <p className="text-muted-foreground text-sm">
-              {product?.description ? stripHtmlTags(product.description).slice(0, 400) + "..." : "Descripción del producto no disponible."}</p>
+              <div className="text-muted-foreground text-sm leading-relaxed">
+                {product?.description ? (
+                  <div
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
+                  />
+                ) : (
+                  "Descripción del producto no disponible."
+                )}
+              </div>
 
             <ul>
               <li className="flex items-center border">
@@ -447,7 +458,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
               </Button> */}
 
             </div>
-            <div>
+            <div className="m-0 p-0">
               <div className="flex items-center justify-center gap-6 py-2">
                 {/* <Button variant="ghost" size="sm" className="text-muted-foreground">
                   <Ruler className="h-4 w-4 mr-2" />
@@ -457,9 +468,9 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                   <Truck className="h-4 w-4 mr-2" />
                   Envío
                 </Button> */}
-                <Button variant="ghost" size="sm" 
+                <Button variant="ghost" size="default" 
                   onClick={handleWhatsAppInquiry}
-                  className="text-muted-foreground">
+                  className=" shadow">
                   <Image
                     src="/assets/whatsapp.svg"
                     alt="Amazon"
@@ -475,35 +486,9 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                   Pregunta Sobre Este Producto
                 </Button> */}
               </div>
+ 
 
-              <div className="flex items-center gap-4 border-t pt-4">
-                <Button variant="outline" size="icon">
-                  <Heart className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon">
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-                <div className="flex-1" />
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <Facebook className="h-4 w-4 mr-2" />
-                  Compartir
-                </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <Twitter className="h-4 w-4 mr-2" />
-                  Tweet
-                </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Pin
-                </Button>
-              </div>
-
-              <div className="border-t pt-4">
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Truck className="h-4 w-4" />
-                  Fecha de delivery estimada: 14 - 16 January 2025
-                </p>
-              </div>
+ 
 
               <div className="border-t pt-4">
                 <p className="text-sm text-muted-foreground mb-2">
@@ -543,7 +528,10 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
             </div>
           </div>
         </div>
+        </div>
         <CurrencySelector/>
+
+
       </main>
       <SiteFooter />
     </>
