@@ -240,7 +240,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/shop/gomas">{product?.categories[0].name}</Link>
+                  <Link href={`/categories/${product?.categories?.[0]?.slug}`}>{product?.categories[0].name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />

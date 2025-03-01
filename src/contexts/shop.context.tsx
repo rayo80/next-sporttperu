@@ -10,7 +10,7 @@ interface ShopContextType {
   shopConfig: ShopConfig | null
   isLoading: boolean
   error: string | null
-  selectedCurrency: Currency | null
+  selectedCurrency: Currency | undefined
   setSelectedCurrency: (currency: Currency) => void
 }
 
@@ -20,7 +20,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [shopConfig, setShopConfig] = useState<ShopConfig | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null)
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | undefined>(undefined)
 
   useEffect(() => {
     const fetchShopConfig = async () => {

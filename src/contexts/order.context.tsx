@@ -13,10 +13,12 @@ import { orderService } from "@/api/order"
 interface OrderContextType {
   currentOrder: Order | null
   isLoading: boolean
+  orders: Order[]
   error: OrderError | null
   createOrderFromCart: (cartState: CartState, customerInfo: CreateCustomerDto) => Promise<Order>
   clearOrder: () => void
   getOrder: (orderId: string) => Promise<Order>
+  fetchOrders: () => Promise<void>
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined)
@@ -31,6 +33,8 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<OrderError | null>(null)
   const { clearCart } = useCart()
   const { customer } = useAuth()
+  const [orders, setOrders] = useState<Order[]>([])
+
 
   const createOrderFromCart = useCallback(
     async (cartState: CartState, customerInfo: CreateCustomerDto): Promise<Order> => {
@@ -126,13 +130,35 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     setError(null)
   }, [])
 
+  const fetchOrders = useCallback(async (): Promise<void> => {
+    if (!customer) return
+
+    setIsLoading(true)
+    setError(null)
+    try {
+      const fetchedOrders = await orderService.getAll('/order')
+      const customerOrders = fetchedOrders.filter((order) => order.customerId === customer.id)
+      setOrders(customerOrders)
+    } catch (err) {
+      const orderError: OrderError = {
+        code: "ORDERS_FETCH_FAILED",
+        message: err instanceof Error ? err.message : "Failed to fetch orders",
+      }
+      setError(orderError)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [customer])
+
   return (
     <OrderContext.Provider
       value={{
         currentOrder,
         isLoading,
+        orders,
         error,
         createOrderFromCart,
+        fetchOrders,
         clearOrder,
         getOrder,
       }}

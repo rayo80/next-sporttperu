@@ -1,5 +1,5 @@
 import { ProductProvider } from "@/contexts/product.context"
-import '@/app/globals.css';
+import "@/app/globals.css";
 import { CartProvider } from "@/contexts/cart.context";
 import { CategoryProvider } from "@/contexts/categories.context";
 import { SiteFooter } from "@/components/site-footer";
@@ -11,6 +11,7 @@ import { ShopProvider } from "@/contexts/shop.context";
 import { CurrencySelector } from "@/components/currency-selector";
 import { PaymentProviderProvider } from "@/contexts/payment-provider.context";
 import { CollectionProvider } from "@/contexts/collections.context";
+import { ShippingMethodProvider } from "@/contexts/shipping-method.context";
 
 export default function RootLayout({
   children,
@@ -25,16 +26,18 @@ export default function RootLayout({
             <CategoryProvider>
               <CartProvider>
                 <CollectionProvider>
-                  <PaymentProviderProvider>
-                    <AuthProvider>
-                      <AddressProvider>
-                        <OrderProvider>
-                        {children}
-                        <Toaster />
-                        </OrderProvider>
-                      </AddressProvider>
-                    </AuthProvider>
-                  </PaymentProviderProvider>
+                  <ShippingMethodProvider>
+                    <PaymentProviderProvider>
+                      <AuthProvider>
+                        <AddressProvider>
+                          <OrderProvider>
+                          {children}
+                          <Toaster />
+                          </OrderProvider>
+                        </AddressProvider>
+                      </AuthProvider>
+                    </PaymentProviderProvider>
+                  </ShippingMethodProvider>
                 </CollectionProvider>
               </CartProvider>
             </CategoryProvider>

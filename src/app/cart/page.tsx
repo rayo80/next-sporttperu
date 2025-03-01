@@ -110,19 +110,19 @@ export default function CartPage() {
       margin: { top: 60 },
     }
 
-    // const tableOptions: UserOptions = {
-    //   head: [["PRODUCTO", "CANTIDAD", "PRECIO", "TOTAL"]],
-    //   body: tableData,
-    //   ...tableStyles,
-    //   columnStyles: {
-    //     0: { cellWidth: 80 },
-    //     1: { cellWidth: 30, halign: "center" },
-    //     2: { cellWidth: 35, halign: "right" },
-    //     3: { cellWidth: 35, halign: "right" },
-    //   },
-    // };
+    const tableOptions: UserOptions = {
+      head: [["PRODUCTO", "CANTIDAD", "PRECIO", "TOTAL"]],
+      body: tableData,
+      ...tableStyles,
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 30, halign: "center" },
+        2: { cellWidth: 35, halign: "right" },
+        3: { cellWidth: 35, halign: "right" },
+      },
+    };
 
-    // autoTable(doc, tableOptions)
+    autoTable(doc, tableOptions)
 
     // Calculate totals
     const subtotal = total
@@ -130,7 +130,7 @@ export default function CartPage() {
     const finalTotal = subtotal + iva
 
     // Add totals
-    const finalY = (doc as any).lastAutoTable.finalY + 10
+    const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 10 : 10;
 
     // Create a pink box for totals
     doc.setFillColor(255, 236, 239)
@@ -161,7 +161,7 @@ export default function CartPage() {
     doc.addImage("assets/logo.png", "PNG", 20, footerY, 40, 15)
 
     // Add contact information
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.text(
       [
         `Dirección: ${shopConfig?.address1 || ""}`,
@@ -277,12 +277,12 @@ export default function CartPage() {
                         <td className="p-4">{currency?.symbol} {itemTotal.toFixed(2)}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => removeItem(item.product.slug)}>
+                            <Button variant="ghost" size="icon" onClick={() => removeItem(item.variant.id)}>
                               <X className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            {/* <Button variant="ghost" size="icon">
                               <Pencil className="h-4 w-4" />
-                            </Button>
+                            </Button> */}
                           </div>
                         </td>
                       </tr>

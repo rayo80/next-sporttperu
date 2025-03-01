@@ -84,7 +84,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true)
     setError(null)
     try {
-      await authService.logout()
       localStorage.removeItem("token")
       setCustomer(null)
     } catch (err) {

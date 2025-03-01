@@ -12,7 +12,7 @@ interface PaymentProviderContextType {
   error: string | null
   updatePaymentProvider: (providerId: string, data: Partial<PaymentProvider>) => Promise<void>
   refreshPaymentProviders: () => Promise<void>
-  getProvidersByCurrency: (currencyCode: string) => PaymentProvider[]
+  getProvidersByCurrency: (currencyCode: string | undefined) => PaymentProvider[]
 }
 
 const PaymentProviderContext = createContext<PaymentProviderContextType | undefined>(undefined)

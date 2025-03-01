@@ -107,7 +107,7 @@ export function SiteHeader() {
                       <Link href="/account">Mi cuenta</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/orders">Mis pedidos</Link>
+                      <Link href="/account/orders">Mis pedidos</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-red-600">

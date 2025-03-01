@@ -25,6 +25,7 @@ import { VariantPrice, VariantPriceModel } from "@/types/product"
 import { useShop } from "@/contexts/shop.context"
 import { usePaymentProvider } from "@/contexts/payment-provider.context"
 import { PaymentProvider, PaymentProviderType } from "@/types/payment-provider"
+import { useShippingMethod } from "@/contexts/shipping-method.context"
 
 interface FormErrors {
   email?: string
@@ -53,7 +54,6 @@ export default function CheckoutPage() {
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
-  const tax = total * 0.18 // 18% IGV
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   
@@ -78,11 +78,14 @@ export default function CheckoutPage() {
   })
 
   const { paymentProviders, isLoading: isLoadingProviders, getProvidersByCurrency } = usePaymentProvider()
-  const { selectedCurrency } = useShop()
+  const { shopConfig, selectedCurrency } = useShop()
   const [ selectedPaymentIdProvider, setSelectedPaymentIdProvider] = useState<string | null>(null)
 
   // Filtrar proveedores de pago por la moneda seleccionada
   const availablePaymentProviders = getProvidersByCurrency(selectedCurrency?.code)
+
+  const { availableShippingMethods, selectedMethod, setSelectedMethod } = useShippingMethod()
+
 
   const selectPaymentById = (selectedPaymentIdProvider: string) => { 
     console.log("selectedPaymentIdProvider", selectedPaymentIdProvider)
@@ -184,6 +187,32 @@ export default function CheckoutPage() {
     setFormErrors(errors)
     return isValid
   }, [formData, validateField])
+
+  // ------------------ SHIPPING METHODS--------------
+
+  const handleShippingMethodChange = (methodId: string) => {
+    const method = availableShippingMethods.find((m) => m.id === methodId)
+    setSelectedMethod(method || null)
+  }
+
+  // Calcula el costo de envío
+  const shippingCost = selectedMethod
+    ? Number(selectedMethod.prices.find((p) => p.currency.code === selectedCurrency?.code)?.price || 0)
+    : 0
+
+  // Actualiza el cálculo del total
+  const subtotal = shopConfig?.taxesIncluded
+    ? total / 1.18 // Si los impuestos están incluidos, el subtotal es el total dividido por 1.18
+    : total // Si los impuestos no están incluidos, el subtotal es el total
+
+  const tax = shopConfig?.taxesIncluded
+    ? subtotal * 0.18 // Si los impuestos están incluidos, calculamos el IGV del subtotal
+    : total * 0.18 // Si los impuestos no están incluidos, calculamos el IGV del total
+
+  const finalTotal = subtotal + tax + shippingCost
+
+
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -301,7 +330,7 @@ export default function CheckoutPage() {
             </section>
 
             {/* Delivery Section */}
-            <section>
+            {/* <section>
               <h2 className="text-2xl font-bold mb-4">Entrega</h2>
               <RadioGroup
                 value={deliveryMethod}
@@ -336,6 +365,39 @@ export default function CheckoutPage() {
                   </Label>
                 </div>
               </RadioGroup>
+            </section> */}
+            <section>
+              <h2 className="text-xl font-semibold mb-4">Métodos de envío</h2>
+              {availableShippingMethods.length > 0 ? (
+                <RadioGroup 
+                  value={selectedMethod?.id} 
+                  onValueChange={handleShippingMethodChange} 
+                  className="space-y-2">
+                  {availableShippingMethods.map((method) => {
+                    const price = method.prices.find((p) => p.currency.code === selectedCurrency?.code)
+                    if (!price) return null // No mostrar si no hay precio en la moneda actual
+                    return (
+                      <div key={method.id} className="   border  ">
+                        <RadioGroupItem value={method.id} id={method.id}  className="peer sr-only" />
+                        <Label 
+                          htmlFor={method.id} 
+                          className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer peer-data-[state=checked]:border-pink-500">
+                          <div className="flex items-center gap-2">
+                            {Number(price.price) === 0 ? <Store className="h-5 w-5" /> : <Truck className="h-5 w-5" />}
+                          </div>
+                          <span>{method.name}</span>
+                          <span>{selectedCurrency?.symbol} {Number(price.price)}</span>
+                        </Label>
+                      </div>
+                    )
+                  })}
+                </RadioGroup>
+              ) : (
+                <p className="text-muted-foreground">
+                  No hay métodos de envío disponibles para la moneda seleccionada.
+                </p>
+              )}
+            </section>
 
             {/* Shipping Address */}
             {deliveryMethod === "shipping" && (
@@ -497,7 +559,7 @@ export default function CheckoutPage() {
                 )}
               </section>
             )}
-            </section>
+            
 
             <section>
               <Label htmlFor="customerNotes">Notas (opcional)</Label>
@@ -653,7 +715,7 @@ export default function CheckoutPage() {
               ))}
             </div>
 
-            <div className="pt-4 border-t">
+            {/* <div className="pt-4 border-t">
               <div className="flex items-center">
                 <Input
                   placeholder="Código de descuento"
@@ -663,20 +725,40 @@ export default function CheckoutPage() {
                   Aplicar
                 </Button>
               </div>
-            </div>
+            </div> */}
 
-            <div className="space-y-4 pt-4 border-t">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{selectedCurrency?.symbol} {total.toFixed(2)}</span>
+            {/* Order Summary */}
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal · {itemCount} artículos</span>
+                <span>
+                  {selectedCurrency?.symbol} {subtotal.toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>IGV</span>
-                <span>{selectedCurrency?.symbol} {tax.toFixed(2)}</span>
+              <div className="flex justify-between text-sm">
+                <span>Envío</span>
+                <span>
+                  {selectedCurrency?.symbol} {shippingCost.toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between font-medium text-lg">
-                <span>Total</span>
-                <span>{selectedCurrency?.symbol} {(total + tax).toFixed(2)}</span>
+              <div className="flex justify-between text-sm">
+                <span>Impuestos</span>
+                <span>
+                  {selectedCurrency?.symbol} {tax.toFixed(2)}
+                </span>
+              </div>
+              <div className="pt-4 border-t">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-base font-medium">Total</span>
+                  <div className="text-right">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm text-muted-foreground">{selectedCurrency?.code}</span>
+                      <span className="text-2xl font-medium">
+                        {selectedCurrency?.symbol} {finalTotal.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
