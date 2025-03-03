@@ -42,78 +42,94 @@ export default function CartPage() {
 
   
   const generateQuotePDF = () => {
-    const doc = new jsPDF()
-    const pageWidth = doc.internal.pageSize.width
-    const pageHeight = doc.internal.pageSize.height
-
-    // Add pink background
-    doc.setFillColor(255, 236, 239)
-    doc.rect(0, 0, pageWidth, pageHeight, "F")
-
-    // Add white rounded rectangle for content
-    doc.setFillColor(255, 255, 255)
-    doc.roundedRect(10, 10, pageWidth - 20, pageHeight - 20, 3, 3, "F")
-
-    // Title
-    doc.setFont("helvetica", "bold")
-    doc.setFontSize(24)
-    doc.text("COTIZACIÓN", pageWidth / 2, 30, { align: "center" })
-
-    // Quote number
-    doc.setFontSize(12)
-    // doc.text("00X", pageWidth / 2, 40, { align: "center" })
-
-    // Date
-    doc.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, pageWidth / 2, 50, { align: "center" })
-
-    // Client Information
-    doc.setFontSize(14)
-    doc.setFontSize(11)
-    doc.setFont("helvetica", "normal")
-    // doc.text(
-    //   [
-    //     `Nombre: ${shopConfig?.name || "Cliente"}`,
-    //     `Documento: ${shopConfig?.id || ""}`,
-    //     `Dirección: ${shopConfig?.address1 || ""}`,
-    //     `${shopConfig?.city || ""}, ${shopConfig?.province || ""}`,
-    //     `Correo: ${shopConfig?.email || ""}`,
-    //     `Teléfono: ${shopConfig?.phone || ""}`,
-    //   ],
-    //   20,
-    //   80,
-    // )
-
-    // Social Media Icons (you would need to add actual icons)
-    // doc.addImage("/instagram-icon.png", "PNG", pageWidth - 60, 70, 8, 8)
-    // doc.addImage("/web-icon.png", "PNG", pageWidth - 40, 70, 8, 8)
-
-    // Products Table
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+  
+    // Fondo rosado para la página
+    doc.setFillColor(255, 236, 239);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  
+    // Rectángulo blanco con esquinas redondeadas para el contenido
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(10, 10, pageWidth - 20, pageHeight - 20, 3, 3, "F");
+  
+    // Título principal
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.text("COTIZACIÓN", pageWidth / 2, 30, { align: "center" });
+  
+    // Número de cotización (comentado, se puede habilitar según necesidad)
+    // doc.setFontSize(12);
+    // doc.text("00X", pageWidth / 2, 40, { align: "center" });
+  
+    // Fecha actual
+    doc.setFontSize(12);
+    doc.text(`Fecha: ${format(new Date(), "dd/MM/yyyy")}`, pageWidth / 2, 50, { align: "center" });
+  
+    // Información del cliente (comentada, se puede habilitar si se requiere)
+    /*
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      [
+        `Nombre: ${shopConfig?.name || "Cliente"}`,
+        `Documento: ${shopConfig?.id || ""}`,
+        `Dirección: ${shopConfig?.address1 || ""}`,
+        `${shopConfig?.city || ""}, ${shopConfig?.province || ""}`,
+        `Correo: ${shopConfig?.email || ""}`,
+        `Teléfono: ${shopConfig?.phone || ""}`,
+      ],
+      20,
+      80,
+    );
+    */
+  
+    // Íconos de redes sociales (comentados, agregar rutas reales a los iconos)
+    /*
+    doc.addImage("/instagram-icon.png", "PNG", pageWidth - 60, 70, 8, 8);
+    doc.addImage("/web-icon.png", "PNG", pageWidth - 40, 70, 8, 8);
+    */
+  
+    // Preparar datos de la tabla de productos
     const tableData = items.map((item) => {
-      const variant = item.variant
+      const variant = item.variant;
       const variantAttributes = Object.entries(variant.attributes)
         .map(([key, value]) => `${key}: ${value}`)
-        .join(", ")
-      const productName = `${item.product.title}\n${variantAttributes}`
-
+        .join(", ");
+      const productName = `${item.product.title}\n${variantAttributes}`;
+  
       return [
         productName,
         item.quantity,
-        `${currency.symbol} ${(getPrice(item).toFixed(2))}`,
-        `${currency.symbol} ${(item.quantity * (getPrice(item))).toFixed(2)}`,
-      ]
-    })
-
+        `${currency.symbol} ${getPrice(item).toFixed(2)}`,
+        `${currency.symbol} ${(item.quantity * getPrice(item)).toFixed(2)}`,
+      ];
+    });
+  
+    // Configuración de estilos para la tabla (se usa type assertion para los arrays de color)
     const tableStyles = {
-      headStyles: { fillColor: [255, 236, 239], textColor: [0, 0, 0], fontStyle: "bold" },
-      bodyStyles: { fillColor: [255, 255, 255] },
-      alternateRowStyles: { fillColor: [252, 252, 252] },
+      headStyles: { 
+        fillColor: [255, 236, 239] as [number, number, number], 
+        textColor: [0, 0, 0] as [number, number, number], 
+        fontStyle: "bold" 
+      },
+      bodyStyles: { fillColor: [255, 255, 255] as [number, number, number] },
+      alternateRowStyles: { fillColor: [252, 252, 252] as [number, number, number] },
       margin: { top: 60 },
-    }
-
+    };
+  
     const tableOptions: UserOptions = {
       head: [["PRODUCTO", "CANTIDAD", "PRECIO", "TOTAL"]],
       body: tableData,
-      ...tableStyles,
+      headStyles: {
+        fillColor: [255, 236, 239] as [number, number, number],
+        textColor: [0, 0, 0] as [number, number, number],
+        fontStyle: "bold" as "bold", // Especificando el tipo correcto
+      },
+      bodyStyles: { fillColor: [255, 255, 255] as [number, number, number] },
+      alternateRowStyles: { fillColor: [252, 252, 252] as [number, number, number] },
+      margin: { top: 60 },
       columnStyles: {
         0: { cellWidth: 80 },
         1: { cellWidth: 30, halign: "center" },
@@ -121,47 +137,47 @@ export default function CartPage() {
         3: { cellWidth: 35, halign: "right" },
       },
     };
-
-    autoTable(doc, tableOptions)
-
-    // Calculate totals
-    const subtotal = total
-    const iva = total * 0.18 // 18% IGV
-    const finalTotal = subtotal + iva
-
-    // Add totals
+  
+    autoTable(doc, tableOptions);
+  
+    // Calcular totales
+    const subtotal = total;
+    const iva = total * 0.18; // 18% IGV
+    const finalTotal = subtotal + iva;
+  
+    // Ubicación para mostrar totales, debajo de la tabla
     const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 10 : 10;
-
-    // Create a pink box for totals
-    doc.setFillColor(255, 236, 239)
-    doc.rect(pageWidth - 90, finalY, 70, 40, "F")
-
-    doc.setFont("helvetica", "normal")
-    doc.text("Sub Total", pageWidth - 85, finalY + 10)
-    doc.text("IVA", pageWidth - 85, finalY + 20)
-    doc.setFont("helvetica", "bold")
-    doc.text("Total", pageWidth - 85, finalY + 30)
-
-    // Add amounts
-    doc.setFont("helvetica", "normal")
-    doc.text(`${currency.symbol} ${subtotal.toFixed(2)}`, pageWidth - 25, finalY + 10, { align: "right" })
-    doc.text(`${currency.symbol} ${iva.toFixed(2)}`, pageWidth - 25, finalY + 20, { align: "right" })
-    doc.setFont("helvetica", "bold")
-    doc.text(`${currency.symbol} ${finalTotal.toFixed(2)}`, pageWidth - 25, finalY + 30, { align: "right" })
-
-    // Add validity notice
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(10)
-
-
-    // Add footer with logo and contact info
-    const footerY = pageHeight - 40
-
-    // Add logo
-    doc.addImage("assets/logo.png", "PNG", 20, footerY, 40, 15)
-
-    // Add contact information
-    doc.setFontSize(10)
+  
+    // Crear un recuadro rosado para los totales
+    doc.setFillColor(255, 236, 239);
+    doc.rect(pageWidth - 90, finalY, 70, 40, "F");
+  
+    // Agregar textos de los totales
+    doc.setFont("helvetica", "normal");
+    doc.text("Sub Total", pageWidth - 85, finalY + 10);
+    doc.text("IVA", pageWidth - 85, finalY + 20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Total", pageWidth - 85, finalY + 30);
+  
+    // Agregar montos
+    doc.setFont("helvetica", "normal");
+    doc.text(`${currency.symbol} ${subtotal.toFixed(2)}`, pageWidth - 25, finalY + 10, { align: "right" });
+    doc.text(`${currency.symbol} ${iva.toFixed(2)}`, pageWidth - 25, finalY + 20, { align: "right" });
+    doc.setFont("helvetica", "bold");
+    doc.text(`${currency.symbol} ${finalTotal.toFixed(2)}`, pageWidth - 25, finalY + 30, { align: "right" });
+  
+    // Nota de validez (comentada, personalizar según sea necesario)
+    /*
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Validez de la cotización: 30 días", 20, finalY + 60);
+    */
+  
+    // Pie de página con logo e información de contacto
+    const footerY = pageHeight - 40;
+    doc.addImage("assets/logo.png", "PNG", 20, footerY, 40, 15);
+  
+    doc.setFontSize(10);
     doc.text(
       [
         `Dirección: ${shopConfig?.address1 || ""}`,
@@ -172,11 +188,11 @@ export default function CartPage() {
       pageWidth - 20,
       footerY,
       { align: "right" },
-    )
-
-    // Save the PDF
-    doc.save("cotizacion.pdf")
-  }
+    );
+  
+    // Guardar el PDF
+    doc.save("cotizacion.pdf");
+  };
   
   function getPricesAsModels(variant: ProductVariant): VariantPriceModel[] {
     return variant.prices.map((p) => VariantPriceModel.fromInterface(p));
@@ -297,7 +313,7 @@ export default function CartPage() {
                 <Link href="/">CONTINUAR COMPRANDO</Link>
               </Button>
               <div className="flex gap-4">
-                <Button variant="outline" onClick={generateQuotePDF}>
+                <Button variant="outline" className="bg-gradient-to-br from-white to-pink-300" onClick={generateQuotePDF}>
                   GENERAR COTIZACIÓN
                 </Button>
                 <Button variant="outline" onClick={clearCart}>
@@ -356,7 +372,7 @@ export default function CartPage() {
                     <span>Total</span>
                     <span>S/. {total.toFixed(2)}</span>
                   </div>
-                  <Button className="w-full bg-pink-500 hover:bg-pink-600">Proceder a pagar</Button>
+                  <Button className="w-full bg-pink-500 hover:bg-pink-600"><Link href="/checkout">Proceder a pagar</Link></Button>
                 </div>
               </div>
             </div>

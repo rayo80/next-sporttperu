@@ -342,8 +342,9 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold">{product?.title}</h1>
-              <div className="mt-4">
+              <div className="mt-4 flex gap-4">
                 <span className="text-3xl font-bold text-pink-500">{selectedCurrency?.symbol} {variantPrice.toFixed(2)}</span>
+                <CurrencySelector/>
               </div>
             </div>
 
@@ -495,20 +496,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
                   Pago seguro garantizado:
                 </p>
                 <div className="flex gap-2">
-                  <Image
-                    src="/assets/amazon.svg"
-                    alt="Amazon"
-                    width={40}
-                    height={24}
-                    className="h-6 w-auto"
-                  />
-                  <Image
-                    src="/assets/bitcoin.svg"
-                    alt="Bitcoin"
-                    width={40}
-                    height={24}
-                    className="h-6 w-auto"
-                  />
+         
                   <Image
                     src="/assets/paypal.svg"
                     alt="PayPal"
@@ -529,7 +517,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           </div>
         </div>
         </div>
-        <CurrencySelector/>
+        
 
 
       </main>

@@ -23,7 +23,7 @@ export const CurrencySelector: React.FC = () => {
           }
         }}
       >
-        <SelectTrigger className="w-[70px] bg-gray-800 shadow-lg hover:shadow-xl transition-shadow border-none">
+        <SelectTrigger className="w-[70px] bg-white  text-gray-800 border border-border   ">
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
         <SelectContent position="popper" className="rounded-lg shadow-xl   bg-white">

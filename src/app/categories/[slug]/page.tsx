@@ -26,8 +26,7 @@ import { useProducts } from "@/contexts/product.context"
 import { SiteFooter } from "@/components/site-footer"
 import { useParams } from "next/navigation"
 import { useCategories } from "@/contexts/categories.context"
-import { CurrencySelector } from "@/components/currency-selector"
- 
+  
 
 const sortOptions = [
   { label: "Destacados", value: "featured" },
@@ -261,7 +260,6 @@ export default function CategoriesPage({ params }: { params: { slug: string } })
           </div>
         </div>
       </main>
-      <CurrencySelector />
       <SiteFooter />
     </>
   )

@@ -15,8 +15,9 @@ export interface Customer {
   firstName: string
   lastName: string
   phone: string
-  email: string
+  email?: string
   acceptsMarketing: boolean
+  extrainfo?: JSON
   addresses: Address[]
 }
 
@@ -26,6 +27,7 @@ export interface CreateCustomerDto {
   phone: string
   email?: string
   acceptsMarketing: boolean
+  extrainfo?: JSON
   password?: string
   addresses: Omit<Address, "id">[]
 }
