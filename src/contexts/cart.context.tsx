@@ -20,7 +20,7 @@ const initialState: CartState = {
   total: 0,
 }
 
-function calculateTotal(items: CartItem[] = [], selectedCurrency: Currency | null): number {
+function calculateTotal(items: CartItem[] = [], selectedCurrency: Currency | undefined): number {
   console.log("Calculando total", items)
   return items.reduce((total, item) => {
     const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
@@ -68,7 +68,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
     case "UPDATE_QUANTITY": {
       const newItems = state.items.map((item) =>
-        item.product.slug === action.payload.variantId ? { ...item, quantity: action.payload.quantity } : item,
+        item.variant.id === action.payload.variantId ? { ...item, quantity: action.payload.quantity } : item,
       )
       return {
         ...state,
@@ -111,7 +111,7 @@ interface CartContextType extends CartState {
   removeItem: (varianId: string) => void
   updateQuantity: (variantId: string, quantity: number) => void
   clearCart: () => void
-  currency: Currency
+  currency: Currency | undefined
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -119,7 +119,6 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: ReactNode }) {
   const { selectedCurrency } = useShop()
   const [ state, dispatch ] = useReducer(cartReducer, initialState)
-  console.log("state eee", state)
   // useEffect(() => {
   //   const savedCart = localStorage.getItem('cart')
   //   if (savedCart) {
@@ -150,6 +149,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const updateQuantity = (variantId: string, quantity: number) => {
+    console.log("Actualizar cantidad", variantId, quantity)
     dispatch({ type: "UPDATE_QUANTITY", payload: { variantId, quantity } })
   }
 

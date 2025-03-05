@@ -16,6 +16,7 @@ export class CartItemModel {
     this.product = data.product;
     this.quantity = data.quantity;
   }
+
 }
 
 export interface CartState {

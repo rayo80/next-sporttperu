@@ -30,10 +30,14 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
   console.log("itemsModel", itemModels)
 
-  const getPrice = (item: CartItem) => {
+  const getPrice = (item: CartItemModel) => {
     const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
     const price = Number.parseFloat(priceObject?.price || "0")
     return price
+  }
+
+  const getTotalItem = (item: CartItemModel) => {
+    return getPrice(item) * item.quantity
   }
 
   return (
@@ -57,7 +61,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             ) : (
               <ul className="divide-y">
                 {itemModels.map((item) => (
-                  <li key={item.product.slug} className="flex py-4 animate-in slide-in-from-right">
+                  <li key={item.variant.id} className="flex py-4 animate-in slide-in-from-right">
                     <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
                       <Image
                         src={generate_url(item.product.imageUrls[0])}
@@ -71,7 +75,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                     <div className="ml-4 flex flex-1 flex-col">
                       <div>
                         <div className="flex justify-between text-base font-medium">
-                          <h3 className="text-sm">{item.product.title}</h3>
+                          <h3 className="text-sm">{item.variant.title}</h3>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -82,7 +86,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           </Button>
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {selectedCurrency?.symbol} {getPrice(item).toFixed(2)}
+                          {selectedCurrency?.symbol} {getTotalItem(item).toFixed(2)}
                         </p>
                       </div>
                       <div className="flex flex-1 items-end justify-between text-sm">
@@ -91,7 +95,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => updateQuantity(item.product.slug, Math.max(0, item.quantity - 1))}
+                            onClick={() => updateQuantity(item.variant.id, Math.max(0, item.quantity - 1))}
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
@@ -100,13 +104,13 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => updateQuantity(item.product.slug, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.variant.id, item.quantity + 1)}
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
                         </div>
                         <div className="text-right font-medium">
-                          {selectedCurrency?.symbol} {getPrice(item).toFixed(2)}
+                          {selectedCurrency?.symbol} {getTotalItem(item).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -130,7 +134,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 >
                   <Link href="/checkout">COMPRAR</Link>
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
+                <Button variant="outline"
+                  asChild
+                  className="w-full" 
+                  onClick={() => onOpenChange(false)}>
                   <Link href="/cart">VER CARRITO</Link>
                 </Button>
               </div>

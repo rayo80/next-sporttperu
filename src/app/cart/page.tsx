@@ -248,7 +248,7 @@ export default function CartPage() {
                           <div className="w-24 h-24 relative">
                             <Image
                               src={validUrl(item.product.imageUrls[0])}
-                              alt={item.product.title}
+                              alt={item.variant.title}
                               fill
                               className="object-contain"
                             />
@@ -256,8 +256,8 @@ export default function CartPage() {
                         </td>
                         <td className="p-4">
                           <h3 className="font-medium">{item.product.title}</h3>
-                          {item.product.variants[0]?.title && (
-                            <p className="text-sm text-muted-foreground">{item.product.variants[0].title}</p>
+                          {item.variant.title && (
+                            <p className="text-sm text-muted-foreground">{item.variant.title}</p>
                           )}
                         </td>
                         <td className="p-4">{currency?.symbol} {price.toFixed(2)}</td>
@@ -366,11 +366,11 @@ export default function CartPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between py-2 border-b">
                     <span>Subtotal</span>
-                    <span>S/. {total.toFixed(2)}</span>
+                    <span>{currency?.symbol} {total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b font-medium">
                     <span>Total</span>
-                    <span>S/. {total.toFixed(2)}</span>
+                    <span>{currency?.symbol} {total.toFixed(2)}</span>
                   </div>
                   <Button className="w-full bg-pink-500 hover:bg-pink-600"><Link href="/checkout">Proceder a pagar</Link></Button>
                 </div>

@@ -96,6 +96,7 @@ export class ProductVariantModel {
   }
 }
 
+
 export interface Product {
     createdAt: string | number | Date
     id: string;
