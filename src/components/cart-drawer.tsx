@@ -28,7 +28,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const { items, total, removeItem, updateQuantity } = useCart()
   const itemModels = items.map((i) => new CartItemModel(i));
 
-  console.log("itemsModel", itemModels)
 
   const getPrice = (item: CartItemModel) => {
     const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)

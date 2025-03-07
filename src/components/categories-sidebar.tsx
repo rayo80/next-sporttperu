@@ -15,7 +15,7 @@ export function CategoriesSidebar() {
           {limitedCategories.map((category) => (
             <li key={category.slug}>
               <Link
-                href={`/categories/${category.slug}`}
+                href={`/shop/category?=${category.slug}`}
                 className="block px-4 py-2.5 hover:bg-accent text-sm font-light"
               >
                 {category.name}

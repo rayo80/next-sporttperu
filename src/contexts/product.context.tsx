@@ -64,7 +64,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     getProducts();
-    console.log("no pase de arriab",)
   }, []);
 
   const getProducts = async () => {

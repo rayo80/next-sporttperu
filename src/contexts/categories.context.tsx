@@ -50,7 +50,6 @@ export function CategoryProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     getCategories();
-    console.log("no pase de arriab",)
   }, []);
 
   const getCategories = async () => {

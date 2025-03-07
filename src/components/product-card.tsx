@@ -27,26 +27,22 @@ export function ProductCard({
 }: ProductCardProps) {
   const { addItem } = useCart()
   const { selectedCurrency } = useShop()
-  console.log("Selected currency:", selectedCurrency)
   
   const { title, slug, imageUrls, status, variants } = product
-  console.log("Product variants:", variants)
   
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
     ? generate_url(imageUrls[0])
     : "/assets/image.png";
   const defaultVariant = variants[0]
-  console.log("Default variant:", defaultVariant)
+
   
   const priceObject = defaultVariant?.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
-  console.log("Price object found:", priceObject)
-  
   const price = Number.parseFloat(priceObject?.price || "0")
-  console.log("Final price calculated:", price)
+
   
   const isOnSale = status === "PUBLISHED" && price < (Number(variants[0]?.prices[0].price))
   const discount = 0
-  console.log("Is on sale:", isOnSale, "Discount:", discount)
+
   
   const inventoryQuantity = variants[0]?.inventoryQuantity || 0
   const isOutOfStock = inventoryQuantity === 0
