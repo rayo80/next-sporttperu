@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { MercadoPagoConfig, Payment } from "mercadopago"
 import { orderService } from "../../../api/order"
+import { CheckoutFormData } from "@/types/checkout";
 
 
 export const mercadopago = new MercadoPagoConfig({accessToken: process.env.NEXT_PUBLIC_MP_ACCESS_TOKEN!});
@@ -14,8 +15,9 @@ export async function POST(request: Request) {
       const payment = await new Payment(mercadopago).get(paymentId)
 
       if (payment.status === "approved") {
+        console.log('payment external reference', payment.external_reference)
         const externalReference = JSON.parse(payment.external_reference)
-        const { formData, items, orderDetails } = externalReference
+        const { items, formData } = externalReference
 
         // Create the order
         const order = await orderService.create('/order',{
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
           })),
           shippingAddressId: formData.addresses[0].id, // Asume que la dirección ya existe, si no, deberías crearla primero
           billingAddressId: formData.addresses[0].id,
-          paymentProviderId: "provider_mercadopago",
+          paymentProviderId: f,
           shippingMethodId: "shipping_standard",
           customerNotes: orderDetails.customerNotes,
           preferredDeliveryDate: orderDetails.preferredDeliveryDate,

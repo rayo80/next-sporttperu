@@ -1,27 +1,30 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 
 import { paymentProviderService } from "@/api/payment-provider"
 import { PaymentProvider } from "@/types/payment-provider"
+import { useShop } from "./shop.context"
 
 interface PaymentProviderContextType {
   paymentProviders: PaymentProvider[] | null
+  availablePaymentProviders: PaymentProvider[]
   isLoading: boolean
   error: string | null
   updatePaymentProvider: (providerId: string, data: Partial<PaymentProvider>) => Promise<void>
   refreshPaymentProviders: () => Promise<void>
-  getProvidersByCurrency: (currencyCode: string | undefined) => PaymentProvider[]
+  // getProvidersByCurrency: (currencyCode: string | undefined) => PaymentProvider[]
 }
 
 const PaymentProviderContext = createContext<PaymentProviderContextType | undefined>(undefined)
 
 export function PaymentProviderProvider({ children }: { children: React.ReactNode }) {
-  const [paymentProviders, setPaymentProviders] = useState<PaymentProvider[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
+  const [ paymentProviders, setPaymentProviders] = useState<PaymentProvider[]>([])
+  const [ isLoading, setIsLoading] = useState(true)
+  const [ error, setError] = useState<string | null>(null)
+  const { selectedCurrency } = useShop()
+  
   const fetchPaymentProviders = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -63,15 +66,23 @@ export function PaymentProviderProvider({ children }: { children: React.ReactNod
     return paymentProviders?.filter((provider) => provider.currency.code === currencyCode)
   }
 
+  const availablePaymentProviders = useMemo(() => {
+    const filtereds = paymentProviders.filter((prov) =>
+      prov.currency.code === selectedCurrency?.code
+    )
+    console.log("filtereds", filtereds)
+    return filtereds
+  }, [paymentProviders, selectedCurrency])
+
   return (
     <PaymentProviderContext.Provider
       value={{
+        availablePaymentProviders,
         paymentProviders,
         isLoading,
         error,
         updatePaymentProvider,
-        refreshPaymentProviders,
-        getProvidersByCurrency,
+        refreshPaymentProviders
       }}
     >
       {children}

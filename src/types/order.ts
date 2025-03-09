@@ -134,18 +134,16 @@ export interface Order {
 
   export interface CreateOrderDto {
     customerId: string
-    email: string
-    phone: string
     currencyId: string
     totalPrice: number
     subtotalPrice: number
     totalTax: number
     totalDiscounts: number
     lineItems: CreateOrderLineItem[]
-    shippingAddressId?: string
-    billingAddressId?: string
-    paymentProviderId?: string
-    shippingMethodId?: string
+    shippingAddressId?: string | null
+    billingAddressId?: string | null
+    paymentProviderId?: string | null
+    shippingMethodId?: string | null
     customerNotes?: string
     preferredDeliveryDate?: string
     source: string

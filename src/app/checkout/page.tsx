@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Truck, Store } from 'lucide-react'
@@ -26,6 +26,7 @@ import { useShop } from "@/contexts/shop.context"
 import { usePaymentProvider } from "@/contexts/payment-provider.context"
 import { PaymentProvider, PaymentProviderType } from "@/types/payment-provider"
 import { useShippingMethod } from "@/contexts/shipping-method.context"
+import { CheckoutFormData } from "@/types/checkout"
 
 interface FormErrors {
   email?: string
@@ -56,45 +57,110 @@ export default function CheckoutPage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
-  
-  const [formData, setFormData] = useState<CreateCustomerDto>({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    acceptsMarketing: false,
-    addresses: [
-      {
-        company: "",
-        address1: "",
-        address2: "",
-        city: "",
-        province: "",
-        zip: "",
-        country: "PE",
-        phone: "",
-      },
-    ]
-  })
-
-  const { paymentProviders, isLoading: isLoadingProviders, getProvidersByCurrency } = usePaymentProvider()
-  const { shopConfig, selectedCurrency } = useShop()
+  const { availablePaymentProviders } = usePaymentProvider()
+  const [paymentMethod, setPaymentMethod] = useState<PaymentProvider | null>(null)
   const [ selectedPaymentIdProvider, setSelectedPaymentIdProvider] = useState<string | null>(null)
 
-  // Filtrar proveedores de pago por la moneda seleccionada
-  const availablePaymentProviders = getProvidersByCurrency(selectedCurrency?.code)
-
+  const { shopConfig, selectedCurrency } = useShop()
+  
   const { availableShippingMethods, selectedMethod, setSelectedMethod } = useShippingMethod()
 
+  // Calcular la fecha 3 días después de hoy
+  const threeDaysFromNow = new Date()
+  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+  const defaultDeliveryDate = threeDaysFromNow.toISOString() // Formato: 2025-01-29T05:00:00.000Z
 
-  const selectPaymentById = (selectedPaymentIdProvider: string) => { 
-    console.log("selectedPaymentIdProvider", selectedPaymentIdProvider)
-    setSelectedPaymentIdProvider(selectedPaymentIdProvider)
-    const provider = availablePaymentProviders.find((p) => p.id === selectedPaymentIdProvider)
-    if (provider) {
-      setPaymentMethod(provider)
-    } 
-  }
+  // Calcula el costo de envío
+  const shippingCost = selectedMethod
+    ? Number(selectedMethod.prices.find((p) => p.currency.code === selectedCurrency?.code)?.price || 0)
+    : 0
+
+  // Actualiza el cálculo del total
+  const subtotal = shopConfig?.taxesIncluded
+    ? total / (1 + Number(shopConfig?.taxValue) / 100) // Si los impuestos están incluidos, el subtotal es el total dividido por 1.18
+    : total // Si los impuestos no están incluidos, el subtotal es el total
+
+  const taxRate = Number(shopConfig?.taxValue || 18) / 100 
+
+  const tax = shopConfig?.taxesIncluded
+    ? subtotal * taxRate // Si los impuestos están incluidos, calculamos el IGV del subtotal
+    : total * taxRate // Si los impuestos no están incluidos, calculamos el IGV del total
+
+  const finalTotal = subtotal + tax + shippingCost
+  // Filtrar proveedores de pago por la moneda seleccionada
+  // const availablePaymentProviders = getProvidersByCurrency(selectedCurrency?.code)
+  const [ formData, setFormData] = useState<CheckoutFormData>({
+    customer: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      acceptsMarketing: false,
+      addresses: [
+        {
+          company: "",
+          address1: "",
+          address2: "",
+          city: "",
+          province: "",
+          zip: "",
+          country: "PE",
+          phone: "",
+        },
+      ],
+    },
+    orderDetails: {
+      customerNotes: "",
+      preferredDeliveryDate: defaultDeliveryDate,
+      paymentProviderId: null,
+      shippingMethodId: null,
+      deliveryMethod: "shipping",
+    },
+    payment: {
+      currencyId: selectedCurrency?.id || "curr_f62e7f75-f8f4", // Solo el ID
+      subtotal: 0,
+      tax: 0,
+      shippingCost: 0,
+      total: 0,
+    },
+    discountCode: "",
+  })
+
+  // Agregar un useEffect para actualizar los valores de pago cuando cambien los cálculos
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      payment: {
+        currencyId: selectedCurrency?.id || prev.payment.currencyId,
+        subtotal,
+        tax,
+        shippingCost,
+        total: finalTotal,
+      },
+    }))
+  }, [subtotal, tax, shippingCost, finalTotal, selectedCurrency])
+
+  // Update the useEffect to populate the form with customer data if available
+  useEffect(() => {
+    if (customer) {
+      setFormData((prev) => ({
+        ...prev,
+        customer: {
+          firstName: customer.firstName,
+          lastName: customer.lastName,
+          phone: customer.phone,
+          email: customer.email,
+          acceptsMarketing: customer.acceptsMarketing,
+          addresses: customer.addresses,
+        },
+      }))
+      if (customer.addresses.length > 0) {
+        setSelectedAddressId(customer.addresses[0].id)
+      }
+    }
+  }, [customer])
+
+
 
   const getPrice = (item: CartItemModel) => {
     const priceObject = item.variant.prices.find((p: VariantPriceModel) => p.currency.code === selectedCurrency?.code)
@@ -102,38 +168,36 @@ export default function CheckoutPage() {
     return price
   }
 
-  const [orderDetails, setOrderDetails] = useState({
-    customerNotes: "",
-    preferredDeliveryDate: "",
-  })
-  const [paymentMethod, setPaymentMethod] = useState<PaymentProvider | null>(null)
+  const validateField = useCallback((name: string, value: string): string | undefined => {
+    switch (name) {
+      case "email":
+        return !value || !value.includes("@") ? "Email inválido" : undefined
+      case "lastName":
+        return !value ? "Apellidos es requerido" : undefined
+      case "address1":
+        return !value ? "Dirección es requerida" : undefined
+      case "city":
+        return !value ? "Ciudad es requerida" : undefined
+      case "province":
+        return !value ? "Región es requerida" : undefined
+      case "phone":
+        return !value ? "Teléfono es requerido" : undefined
+      default:
+        return undefined
+    }
+  }, [])
 
-  const validateField = useCallback(
-    (name: string, value: string): string | undefined => {
-      switch (name) {
-        case "email":
-          return !value || !value.includes("@") ? "Email inválido" : undefined
-        case "lastName":
-          return !value ? "Apellidos es requerido" : undefined
-        case "address1":
-          return deliveryMethod === "shipping" && !value ? "Dirección es requerida" : undefined
-        case "city":
-          return deliveryMethod === "shipping" && !value ? "Ciudad es requerida" : undefined
-        case "province":
-          return deliveryMethod === "shipping" && !value ? "Región es requerida" : undefined
-        case "phone":
-          return !value ? "Teléfono es requerido" : undefined
-        default:
-          return undefined
-      }
-    },
-    [deliveryMethod],
-  )
-
+  // Update the handleInputChange function
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target
-      setFormData((prev) => ({ ...prev, [name]: value }))
+      setFormData((prev) => ({
+        ...prev,
+        customer: {
+          ...prev.customer,
+          [name]: value,
+        },
+      }))
       const error = validateField(name, value)
       setFormErrors((prev) => ({ ...prev, [name]: error }))
     },
@@ -149,18 +213,37 @@ export default function CheckoutPage() {
     [validateField],
   )
 
+  const handleCheckoutChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target
+      console.log("name", name, "value", value)
+      setFormData((prev) => ({
+        ...prev,
+        orderDetails: {
+          ...prev.orderDetails,
+          customerNotes: e.target.value,
+        },
+      }))
+      console.log("form data", formData)
+    },
+    [validateField],
+  )
   
+  // Update the handleAddressChange function
   const handleAddressChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target
       setFormData((prev) => ({
         ...prev,
-        addresses: [
-          {
-            ...prev.addresses[0],
-            [name]: value,
-          },
-        ],
+        customer: {
+          ...prev.customer,
+          addresses: [
+            {
+              ...prev.customer.addresses[0],
+              [name]: value,
+            },
+          ],
+        },
       }))
       const error = validateField(name, value)
       setFormErrors((prev) => ({ ...prev, [name]: error }))
@@ -168,11 +251,19 @@ export default function CheckoutPage() {
     [validateField],
   )
 
+  // Update the handleCheckboxChange function
   const handleCheckboxChange = useCallback((checked: boolean) => {
-    setFormData((prev) => ({ ...prev, newsletter: checked }))
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        acceptsMarketing: checked,
+      },
+    }))
   }, [])
 
   const validateForm = useCallback((): boolean => {
+
     const errors: FormErrors = {}
     let isValid = true
 
@@ -188,30 +279,30 @@ export default function CheckoutPage() {
     return isValid
   }, [formData, validateField])
 
-  // ------------------ SHIPPING METHODS--------------
+  // Update the handlePaymentMethodChange function
+  const handlePaymentMethodChange = (paymentId: string) => {
+    const provider = availablePaymentProviders.find((p) => p.id === paymentId)
+    setPaymentMethod(provider || null)
+    setFormData((prev) => ({
+      ...prev,
+      orderDetails: {
+        ...prev.orderDetails,
+        paymentProviderId: paymentId,
+      },
+    }))
+  }
 
   const handleShippingMethodChange = (methodId: string) => {
     const method = availableShippingMethods.find((m) => m.id === methodId)
     setSelectedMethod(method || null)
+    setFormData((prev) => ({
+      ...prev,
+      orderDetails: {
+        ...prev.orderDetails,
+        shippingMethodId: methodId,
+      },
+    }))
   }
-
-  // Calcula el costo de envío
-  const shippingCost = selectedMethod
-    ? Number(selectedMethod.prices.find((p) => p.currency.code === selectedCurrency?.code)?.price || 0)
-    : 0
-
-  // Actualiza el cálculo del total
-  const subtotal = shopConfig?.taxesIncluded
-    ? total / 1.18 // Si los impuestos están incluidos, el subtotal es el total dividido por 1.18
-    : total // Si los impuestos no están incluidos, el subtotal es el total
-
-  const tax = shopConfig?.taxesIncluded
-    ? subtotal * 0.18 // Si los impuestos están incluidos, calculamos el IGV del subtotal
-    : total * 0.18 // Si los impuestos no están incluidos, calculamos el IGV del total
-
-  const finalTotal = subtotal + tax + shippingCost
-
-
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -243,7 +334,7 @@ export default function CheckoutPage() {
         // Redirect to MercadoPago payment page
         window.location.href = init_point
       } else {
-        // Proceed with other payment methods (create order directly)
+        // Proceed with  other payment methods (create order directly)
           const order = await createOrderFromCart({ items: cartItems, total }, formData)
         
           toast.success("¡Orden creada con éxito!")
@@ -291,7 +382,7 @@ export default function CheckoutPage() {
                   <Input
                     type="email"
                     name="email"
-                    value={customer ? customer.email : formData.email}
+                    value={customer ? customer.email : formData.customer.email}
                     onChange={handleInputChange}
                     placeholder="Email"
                     className={`w-full ${formErrors.email ? "border-red-500" : ""}`}
@@ -304,7 +395,7 @@ export default function CheckoutPage() {
                   <Input
                     type="tel"
                     name="phone"
-                    value={formData.phone}
+                    value={formData.customer.phone}
                     onChange={handleInputChange}
                     placeholder="Teléfono"
                     className={`w-full ${formErrors.phone ? "border-red-500" : ""}`}
@@ -330,42 +421,6 @@ export default function CheckoutPage() {
             </section>
 
             {/* Delivery Section */}
-            {/* <section>
-              <h2 className="text-2xl font-bold mb-4">Entrega</h2>
-              <RadioGroup
-                value={deliveryMethod}
-                onValueChange={(value) => setDeliveryMethod(value as "shipping" | "pickup")}
-                className="space-y-4"
-              >
-                <div>
-                  <RadioGroupItem value="shipping" id="shipping" className="peer sr-only" />
-                  <Label
-                    htmlFor="shipping"
-                    className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer peer-data-[state=checked]:border-pink-500"
-                  >
-                    <Truck className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">Envío</div>
-                      <div className="text-sm text-muted-foreground">Entrega a domicilio</div>
-                    </div>
-                  </Label>
-                </div>
-
-                <div>
-                  <RadioGroupItem value="pickup" id="pickup" className="peer sr-only" />
-                  <Label
-                    htmlFor="pickup"
-                    className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer peer-data-[state=checked]:border-pink-500"
-                  >
-                    <Store className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">Retiro en tienda</div>
-                      <div className="text-sm text-muted-foreground">Recoge tu pedido en nuestra tienda</div>
-                    </div>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </section> */}
             <section>
               <h2 className="text-xl font-semibold mb-4">Métodos de envío</h2>
               {availableShippingMethods.length > 0 ? (
@@ -453,7 +508,7 @@ export default function CheckoutPage() {
                       id="firstName"
                       name="firstName"
                       type="text"
-                      value={customer ? customer.firstName : formData.firstName}
+                      value={customer ? customer.firstName : formData.customer.firstName}
                       onChange={handleInputChange}
                       required
                       disabled={!!customer}
@@ -465,7 +520,7 @@ export default function CheckoutPage() {
                       id="lastName"
                       name="lastName"
                       type="text"
-                      value={customer ? customer.lastName : formData.lastName}
+                      value={customer ? customer.lastName : formData.customer.lastName}
                       onChange={handleInputChange}
                       required
                       className={formErrors.lastName ? "border-red-500" : ""}
@@ -481,7 +536,7 @@ export default function CheckoutPage() {
                     id="address1"
                     name="address1"
                     type="text"
-                    value={formData.addresses[0].address1}
+                    value={formData.customer.addresses[0].address1}
                     onChange={handleAddressChange}
                     required
                     className={formErrors.address1 ? "border-red-500" : ""}
@@ -495,7 +550,7 @@ export default function CheckoutPage() {
                     id="address2"
                     name="address2"
                     type="text"
-                    value={formData.addresses[0].address2}
+                    value={formData.customer.addresses[0].address2}
                     onChange={handleAddressChange}
                   />
                 </div>
@@ -507,7 +562,7 @@ export default function CheckoutPage() {
                       id="city"
                       name="city"
                       type="text"
-                      value={formData.addresses[0].city}
+                      value={formData.customer.addresses[0].city}
                       onChange={handleAddressChange}
                       required
                       className={formErrors.city ? "border-red-500" : ""}
@@ -518,7 +573,7 @@ export default function CheckoutPage() {
                     <Label htmlFor="province">Región</Label>
                     <Select
                       name="province"
-                      value={formData.addresses[0].province}
+                      value={formData.customer.addresses[0].province}
                       onValueChange={(value) =>
                         handleAddressChange({
                           target: { name: "province", value },
@@ -542,7 +597,7 @@ export default function CheckoutPage() {
                       id="zip"
                       name="zip"
                       type="text"
-                      value={formData.addresses[0].zip}
+                      value={formData.customer.addresses[0].zip}
                       onChange={handleAddressChange}
                       required
                     />
@@ -560,19 +615,20 @@ export default function CheckoutPage() {
               </section>
             )}
             
-
+            {/* Customer Notes */}
             <section>
               <Label htmlFor="customerNotes">Notas (opcional)</Label>
               <Input
                 id="customerNotes"
                 name="customerNotes"
                 type="text"
-                value={orderDetails.customerNotes}
-                onChange={(e) => setOrderDetails((prev) => ({ ...prev, customerNotes: e.target.value }))}
+                value={formData.orderDetails.customerNotes}
+                onChange={handleCheckoutChange}
                 placeholder="Añade alguna nota para el pedido"
               />
             </section>
-            {/* Payment Methods */}
+
+            {/* Payment Providers */}
             <section>
               <h2 className="text-xl font-semibold mb-4">Método de Pago</h2>
               <p className="text-sm text-muted-foreground mb-4">
@@ -581,8 +637,8 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 <div className="border rounded-lg overflow-hidden">
                 <RadioGroup
-                      value={selectedPaymentIdProvider || ""}
-                      onValueChange={(value) => selectPaymentById(value)}
+                      value={paymentMethod?.id}
+                      onValueChange={handlePaymentMethodChange}
                     >
                       {availablePaymentProviders.map((provider) => (
                         <div key={provider.id} className="p-4 border-b last:border-b-0">
@@ -604,78 +660,6 @@ export default function CheckoutPage() {
                         </div>
                       ))}
                     </RadioGroup>
-                  {/* <RadioGroup defaultValue="mercadopago" className="divide-y">
-                    <div className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="mercadopago" id="mercadopago" />
-                        <Label htmlFor="mercadopago" className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span>Mercado Pago</span>
-                            <div className="flex items-center gap-2">
-                              <Image
-                                src="assets/mercadopago.svg"
-                                alt="Visa"
-                                width={32}
-                                height={20}
-                                className="h-5 w-auto"
-                              />
-                              <Image
-                                src="assets/visa.svg"
-                                alt="Mastercard"
-                                width={32}
-                                height={20}
-                                className="h-5 w-auto"
-                              />
-                              <Image
-                                src="assets/master.svg"
-                                alt="master"
-                                width={32}
-                                height={20}
-                                className="h-5 w-auto"
-                              />
-                              <span className="text-sm text-muted-foreground">+3</span>
-                            </div>
-                          </div>
-                        </Label>
-                      </div>
-                      <div className="mt-4 pl-6">
-                        <div className="flex justify-center">
-                          <div className="text-center max-w-sm">
-                            <div className="mx-auto w-16 h-16 mb-4 text-muted-foreground">
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="3" y="3" width="18" height="18" rx="2" />
-                                <path d="M3 9h18" />
-                                <path d="M15 15h3" />
-                              </svg>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Después de hacer clic en "Pagar ahora", serás redirigido a Mercado Pago para completar tu
-                              compra de forma segura.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="bank" id="bank" />
-                        <Label htmlFor="bank">Depósito Bancario</Label>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="reserve" id="reserve" />
-                        <Label htmlFor="reserve">Solicitar Reserva</Label>
-                      </div>
-                    </div>
-                  </RadioGroup> */}
                 </div>
               </div>
             </section>

@@ -87,7 +87,7 @@ export default function Home() {
                 <ProductSlider products={collectionProducts} breakpoints={sliderRowBreakpoints} />
                 <div className="flex justify-center">
                   <Button asChild variant="outline" className="rounded-full transition-all mt-8 md:mt-16 px-8 bg-gradient-to-tr from-white to-gray-200 shadow-md shadow-slate-100  hover:to-gray-300 ">
-                    <Link href={`/categories/all`}>Explora</Link>
+                    <Link href={`/shop`}>Explora</Link>
                   </Button>
                 </div>
               </div>

@@ -2,8 +2,9 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import type { Currency, ShopConfig } from "@/types/shop"
+import type { ShopConfig } from "@/types/shop"
 import { shopService } from "@/api/shop"
+import { Currency } from "@/types/product"
 
 
 interface ShopContextType {

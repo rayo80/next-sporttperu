@@ -8,6 +8,7 @@ import { customerService } from "@/api/customers"
 import { useCart } from "./cart.context"
 import { useAuth } from "./auth.context"
 import { orderService } from "@/api/order"
+import { CheckoutFormData } from "@/types/checkout"
 
 
 interface OrderContextType {
@@ -15,7 +16,7 @@ interface OrderContextType {
   isLoading: boolean
   orders: Order[]
   error: OrderError | null
-  createOrderFromCart: (cartState: CartState, customerInfo: CreateCustomerDto) => Promise<Order>
+  createOrderFromCart: (cartState: CartState, checkoutData: CheckoutFormData) => Promise<Order>
   clearOrder: () => void
   getOrder: (orderId: string) => Promise<Order>
   fetchOrders: () => Promise<void>
@@ -37,25 +38,24 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
 
   const createOrderFromCart = useCallback(
-    async (cartState: CartState, customerInfo: CreateCustomerDto): Promise<Order> => {
+    async (cartState: CartState, 
+      checkoutData: CheckoutFormData): Promise<Order> => {
       setIsLoading(true)
       setError(null)
 
       try {
         // Calculate tax (IGV 18%)
-        const subtotalPrice = cartState.total
-        const totalTax = subtotalPrice * 0.18
-        const totalPrice = subtotalPrice + totalTax
+        const { subtotal, tax, total, currencyId } = checkoutData.payment
 
         // Convert cart items to order items
         const lineItems = cartState.items.map((item) => ({
           variantId: item.variant.id,
           quantity: item.quantity,
           title: item.product.title,
-          price: Number(item.variant.prices[0]?.price || 0),
+          price: Number(item.variant.prices.find((p) => p.currencyId === currencyId)?.price || 0),
           totalDiscount: 0, // Implement discount logic if needed
         }))
-
+        console.log('lineItems', lineItems)
         let orderCustomer: Customer
 
         if (customer) {
@@ -63,7 +63,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         } else {
           try {
             // Create a new customer
-            orderCustomer = await customerService.create(customerInfo)
+            checkoutData.customer.extrainfo = {email: checkoutData.customer.email}
+            checkoutData.customer.email = null
+            orderCustomer = await customerService.create(checkoutData.customer)
           } catch (error) {
             console.error("Error creating customer:", error)
             throw new Error("Failed to create customer. Please try again.")
@@ -72,18 +74,18 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
         const orderData: CreateOrderDto = {
           customerId: orderCustomer.id,
-          email: orderCustomer.email,
-          phone: orderCustomer.phone,
-          currencyId: DEFAULT_CURRENCY_ID,
-          totalPrice,
-          subtotalPrice,
-          totalTax,
+          currencyId: currencyId,
+          totalPrice: total,
+          subtotalPrice: subtotal,
+          totalTax: tax,
           totalDiscounts: 0, // Implement discount logic if needed
           lineItems,
           shippingAddressId: orderCustomer.addresses[0]?.id,
           billingAddressId: orderCustomer.addresses[0]?.id,
-          // paymentProviderId: DEFAULT_PAYMENT_PROVIDER,
-          // shippingMethodId: DEFAULT_SHIPPING_METHOD,
+          paymentProviderId: checkoutData.orderDetails.paymentProviderId,
+          shippingMethodId: checkoutData.orderDetails.shippingMethodId,
+          customerNotes: checkoutData.orderDetails.customerNotes,
+          preferredDeliveryDate: checkoutData.orderDetails.preferredDeliveryDate,
           source: "web",
         }
 

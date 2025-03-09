@@ -7,7 +7,7 @@ export enum PaymentProviderType {
     BANK_TRANSFER = "BANK_TRANSFER",
     CASH_ON_DELIVERY = "CASH_ON_DELIVERY",
     OTHER = "OTHER",
-    MERCADO_PAGO = "MERCADO_PAGO",
+    MERCADO_PAGO = "MERCADOPAGO",
   }
   
   

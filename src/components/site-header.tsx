@@ -158,7 +158,7 @@ export function SiteHeader() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white focus:bg-gray-800 focus:text-white focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-gray-800 data-[state=open]:bg-gray-800">
-                    <Link href={"/categories/all"}>Tienda</Link>
+                    <Link href={"/shop"}>Tienda</Link>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2  ">
@@ -166,7 +166,7 @@ export function SiteHeader() {
                         <li key={category.slug}>
                           <NavigationMenuLink asChild>
                             <Link
-                              href={`/categories/${category.slug}`}
+                              href={`/shop?category=${category.slug}`}
                               className="block select-none space-y-1 rounded-md p-3 leading-none transition-colors hover:bg-gray-100 hover:text-gray-900"
                             >
                               {category.name}
