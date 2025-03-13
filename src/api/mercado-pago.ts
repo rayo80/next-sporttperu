@@ -15,6 +15,7 @@ export const mercadopagoService = {
         //     pending: `${API_URL}/checkout/pending`,
         //   },
         })
+        console.log('response', response)
         return response.data.init_point
       } catch (error) {
         console.error("Error creating MercadoPago preference:", error)

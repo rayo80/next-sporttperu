@@ -24,10 +24,6 @@ interface OrderContextType {
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined)
 
-const DEFAULT_CURRENCY_ID = "curr_0536edd0-2193" // PEN
-const DEFAULT_PAYMENT_PROVIDER = "provider_mercadopago"
-const DEFAULT_SHIPPING_METHOD = "shipping_standard"
-
 export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -45,17 +41,10 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
       try {
         // Calculate tax (IGV 18%)
+        const { customer:formCustomer, orderDetails, payment, cartItems } = checkoutData
         const { subtotal, tax, total, currencyId } = checkoutData.payment
 
-        // Convert cart items to order items
-        const lineItems = cartState.items.map((item) => ({
-          variantId: item.variant.id,
-          quantity: item.quantity,
-          title: item.product.title,
-          price: Number(item.variant.prices.find((p) => p.currencyId === currencyId)?.price || 0),
-          totalDiscount: 0, // Implement discount logic if needed
-        }))
-        console.log('lineItems', lineItems)
+
         let orderCustomer: Customer
 
         if (customer) {
@@ -63,9 +52,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         } else {
           try {
             // Create a new customer
-            checkoutData.customer.extrainfo = {email: checkoutData.customer.email}
+            checkoutData.customer.extrainfo = {email: formCustomer.email}
             checkoutData.customer.email = null
-            orderCustomer = await customerService.create(checkoutData.customer)
+            orderCustomer = await customerService.create(formCustomer)
           } catch (error) {
             console.error("Error creating customer:", error)
             throw new Error("Failed to create customer. Please try again.")
@@ -79,7 +68,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           subtotalPrice: subtotal,
           totalTax: tax,
           totalDiscounts: 0, // Implement discount logic if needed
-          lineItems,
+          lineItems: cartItems!,
           shippingAddressId: orderCustomer.addresses[0]?.id,
           billingAddressId: orderCustomer.addresses[0]?.id,
           paymentProviderId: checkoutData.orderDetails.paymentProviderId,
@@ -89,7 +78,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           source: "web",
         }
 
-        const createdOrder = await orderService.create('/order',orderData)
+        const createdOrder = await orderService.create('/order', orderData)
         setCurrentOrder(createdOrder)
         clearCart() // Clear the cart after successful order creation
         return createdOrder

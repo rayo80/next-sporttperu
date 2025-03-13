@@ -4,12 +4,14 @@ import { NextResponse } from "next/server"
 
 // Initialize MercadoPago with your access token
 
-export const mercadopago = new MercadoPagoConfig({accessToken: process.env.NEXT_PUBLIC_MP_ACCESS_TOKEN!});
+export const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN!});
 
 export async function POST(request: Request) {
   try {
     const { items, external_reference: formData } = await request.json()
-    console.log('data', items, formData)
+    console.log('items', items,)
+    console.log('formData', formData)
+    console.log('adresses', formData)
     // Create the MercadoPago preference
     const preference = await new Preference(mercadopago).create({
       body: {
@@ -23,9 +25,9 @@ export async function POST(request: Request) {
             number: formData.phone,
           },
           address: {
-            street_name: formData.addresses[0].address1,
+            street_name: formData.customer.addresses[0].address1,
             street_number: "",
-            zip_code: formData.addresses[0].zip,
+            zip_code: formData.customer.addresses[0].zip,
           },
         },
         back_urls: {

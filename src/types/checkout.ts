@@ -1,10 +1,24 @@
-import type { CreateCustomerDto } from "@/types/customer"
+import type { Address, CreateCustomerDto } from "@/types/customer"
 import { Currency } from "./product"
 
+export interface OrderItemData {
+    variantId: string
+    title: string
+    quantity: number
+    price: number
+    // imageUrl: string
+    // attributes: Record<string, string>
+  }
+
+  // Tipo modificado para permitir direcciones con ID
+type CustomerWithOptionalId = Omit<CreateCustomerDto, "addresses"> & {
+    id?: string
+    addresses: (Omit<Address, "id"> & { id?: string })[]
+  }
+  
 export interface CheckoutFormData {
     // Customer information
-    customer: CreateCustomerDto
-
+    customer: CustomerWithOptionalId
     // Order details
     orderDetails: {
         customerNotes?: string
@@ -22,6 +36,9 @@ export interface CheckoutFormData {
         shippingCost: number
         total: number
     }
+  
+    // Cart items
+    cartItems?: OrderItemData[]
   
     // Discount code
     discountCode?: string

@@ -315,27 +315,49 @@ export default function CheckoutPage() {
     }
 
     try {
-      // console.log("paymentMethod", paymentMethod?.name)
-      // console.log("selectedPaymentProvider", selectedPaymentIdProvider)
-      if (paymentMethod?.type === PaymentProviderType.MERCADO_PAGO) {
-        // Create MercadoPago preference
-        const itemsPref = cartItems.map((item) => ({
-          id: item.variant.id,
+      const currencyId = formData.payment.currencyId
+      const completeFormData: CheckoutFormData = {
+        ...formData,
+        customer: {
+          ...formData.customer,
+          id: customer ? customer.id : formData.customer.id, // Si hay `customer`, usa su `id`, sino mantiene el del formulario.
+          addresses: customer ? customer.addresses.map((addr) => ({ ...addr })) : formData.customer.addresses, // Si hay `customer`, usa sus direcciones, sino mantiene las del formulario.
+        },
+        cartItems: cartItems.map((item) => ({
+          variantId: item.variant.id,
           title: item.product.title,
-          unit_price: Number(item.variant.prices[0]?.price || 0),
           quantity: item.quantity,
-        }))
-        
-        const init_point = await mercadopagoService.createPreference(
-          itemsPref,
-          formData,
-        )
-        
-        // Redirect to MercadoPago payment page
-        window.location.href = init_point
+          price: Number(item.variant.prices.find((p) => p.currencyId === currencyId)?.price || 0),
+        })),
+      }
+
+      if (paymentMethod?.type === PaymentProviderType.MERCADO_PAGO) {
+
+        // Create MercadoPago preference
+        try {
+          const mercadoPagoItems = completeFormData.cartItems!.map((item) => ({
+            id: item.variantId,
+            title: item.title,
+            description: item.title,
+            unit_price: item.price,
+            quantity: item.quantity,
+          }))
+
+          
+          const init_point = await mercadopagoService.createPreference(
+            mercadoPagoItems,
+            completeFormData,
+          )
+          
+          // Redirect to MercadoPago payment page
+          window.location.href = init_point
+        } catch (error) {
+          console.error("Error creating MercadoPago preference:", error)
+          toast.error("Error al crear la preferencia de pago. Por favor, inténtelo de nuevo.")
+        }
       } else {
         // Proceed with  other payment methods (create order directly)
-          const order = await createOrderFromCart({ items: cartItems, total }, formData)
+          const order = await createOrderFromCart({ items: cartItems, total }, completeFormData)
         
           toast.success("¡Orden creada con éxito!")
           clearCart()

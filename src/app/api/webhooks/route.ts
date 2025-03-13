@@ -2,47 +2,68 @@ import { NextResponse } from "next/server"
 import { MercadoPagoConfig, Payment } from "mercadopago"
 import { orderService } from "../../../api/order"
 import { CheckoutFormData } from "@/types/checkout";
+import { CreateOrderDto } from "@/types/order";
+import { customerService } from "@/api/customers";
+import { Customer } from "@/types/customer";
 
 
-export const mercadopago = new MercadoPagoConfig({accessToken: process.env.NEXT_PUBLIC_MP_ACCESS_TOKEN!});
+export const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN!});
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-
+    console.log('body', body)
     if (body.type === "payment") {
       const paymentId = body.data.id
       const payment = await new Payment(mercadopago).get(paymentId)
-
+      console.log('payment', payment)
       if (payment.status === "approved") {
-        console.log('payment external reference', payment.external_reference)
-        const externalReference = JSON.parse(payment.external_reference)
-        const { items, formData } = externalReference
+        console.log(payment)
+        const completeFormData: CheckoutFormData = JSON.parse(payment.external_reference)
+        const { customer: formCustomer, orderDetails, payment: paymentInfo, cartItems } = completeFormData
 
+        
+        // Buscar o crear el cliente
+        let orderCustomer: Customer
+        let customerId: string
+        const customerData = formCustomer
+
+        try {
+          // Si ya tenemos el ID del cliente desde el frontend, lo usamos directamente
+          if (customerData.id) {
+            // Podríamos verificar que el cliente existe, pero asumimos que es válido
+            customerId = customerData.id
+          } else {
+            // Si no hay ID, crear un nuevo cliente
+            orderCustomer = await customerService.create(customerData)
+            customerId = orderCustomer.id
+          }
+        } catch (error) {
+          console.error("Error managing customer:", error)
+          throw new Error("Failed to process customer data")
+        }
+        
         // Create the order
-        const order = await orderService.create('/order',{
-          customerId: formData.id, // Asume que el cliente ya existe, si no, deberías crearlo primero
-          email: formData.email,
-          phone: formData.phone,
-          currencyId: "PEN", // Ajusta según sea necesario
-          totalPrice: payment.transaction_amount,
-          subtotalPrice: payment.transaction_amount - payment.taxes_amount,
-          totalTax: payment.taxes_amount,
-          totalDiscounts: 0, // Implementa la lógica de descuentos si es necesario
-          lineItems: items.map((item: any) => ({
-            productId: item.id,
-            variantId: item.id,
-            quantity: item.quantity,
-            price: item.unit_price,
-          })),
-          shippingAddressId: formData.addresses[0].id, // Asume que la dirección ya existe, si no, deberías crearla primero
-          billingAddressId: formData.addresses[0].id,
-          paymentProviderId: f,
-          shippingMethodId: "shipping_standard",
+        const orderData: CreateOrderDto = {
+          customerId: customerId,
+          currencyId: paymentInfo.currencyId,
+          totalPrice: paymentInfo.total,
+          subtotalPrice: paymentInfo.subtotal,
+          totalTax: paymentInfo.tax,
+          totalDiscounts: 0,
+          lineItems: cartItems!,
+          shippingAddressId: formCustomer.addresses[0]?.id,
+          billingAddressId: formCustomer.addresses[0]?.id,
+          paymentProviderId: orderDetails.paymentProviderId,
+          shippingMethodId: orderDetails.shippingMethodId,
           customerNotes: orderDetails.customerNotes,
           preferredDeliveryDate: orderDetails.preferredDeliveryDate,
           source: "web",
-        })
+        }
+
+
+
+        const order = await orderService.create('/order', orderData)
 
         return NextResponse.json({ success: true, orderId: order.id })
       }

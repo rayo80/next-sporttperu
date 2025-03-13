@@ -15,7 +15,7 @@ export interface Customer {
   firstName: string
   lastName: string
   phone: string
-  email?: string
+  email?: string | null
   acceptsMarketing: boolean
   extrainfo?: JSON
   addresses: Address[]
