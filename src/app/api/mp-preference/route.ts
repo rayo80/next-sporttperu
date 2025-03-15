@@ -1,17 +1,19 @@
+import { CheckoutFormData } from '@/types/checkout';
 import MercadoPagoConfig, { Preference } from "mercadopago";
 import { NextResponse } from "next/server"
 
 
 // Initialize MercadoPago with your access token
+const NEXT_PUBLIC_HOST = process.env.NEXT_PUBLIC_HOST || 'http://localhost:3000'
 
 export const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN!});
 
 export async function POST(request: Request) {
   try {
-    const { items, external_reference: formData } = await request.json()
+    const { items, checkoutFormData: formData, orderId } = await request.json()
     console.log('items', items,)
     console.log('formData', formData)
-    console.log('adresses', formData)
+    console.log('adresses', orderId)
     // Create the MercadoPago preference
     const preference = await new Preference(mercadopago).create({
       body: {
@@ -31,14 +33,12 @@ export async function POST(request: Request) {
           },
         },
         back_urls: {
-          success: `/checkout/success`,
-          failure: `/checkout/failure`,
-          pending: `/checkout/pending`,
+          success: `${NEXT_PUBLIC_HOST}/checkout/success`,
+          failure: `${NEXT_PUBLIC_HOST}/checkout/failure`,
+          pending: `${NEXT_PUBLIC_HOST}/checkout/pending`,
         },
         auto_return: "approved",
-        external_reference: JSON.stringify({
-          formData
-        }),
+        external_reference: orderId,
       },
     })
 

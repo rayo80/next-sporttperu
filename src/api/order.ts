@@ -28,5 +28,19 @@ export const orderService = {
     }
   },
 
+
+  update: async (endpoint: string, orderId: string, orderData: Partial<Order>): Promise<Order> => {
+    console.log('update', endpoint, orderId)
+    try {
+      const response = await api.patch(`${endpoint}/${orderId}`, orderData)
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data.message || "Error updating order")
+      }
+      throw error
+    }
+  },
+
 };
 

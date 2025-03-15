@@ -27,6 +27,7 @@ import { usePaymentProvider } from "@/contexts/payment-provider.context"
 import { PaymentProvider, PaymentProviderType } from "@/types/payment-provider"
 import { useShippingMethod } from "@/contexts/shipping-method.context"
 import { CheckoutFormData } from "@/types/checkout"
+import { OrderFinancialStatus } from "@/types/commom"
 
 interface FormErrors {
   email?: string
@@ -329,6 +330,10 @@ export default function CheckoutPage() {
           quantity: item.quantity,
           price: Number(item.variant.prices.find((p) => p.currencyId === currencyId)?.price || 0),
         })),
+        orderDetails: {
+          ...formData.orderDetails,
+          paymentStatus: OrderFinancialStatus.PENDING,
+        }
       }
 
       if (paymentMethod?.type === PaymentProviderType.MERCADO_PAGO) {
@@ -342,11 +347,23 @@ export default function CheckoutPage() {
             unit_price: item.price,
             quantity: item.quantity,
           }))
-
           
+          // const checkoutMPFormData: CheckoutFormData = {
+          //   ...completeFormData,
+          //   orderDetails: {
+          //     ...completeFormData.orderDetails,
+          //     paymentStatus: OrderFinancialStatus.PENDING, // Agregar estado pendiente
+          //   },
+          // }
+
+          const order = await createOrderFromCart(
+            completeFormData
+          )
+          console.log("completeFormData", completeFormData)
           const init_point = await mercadopagoService.createPreference(
             mercadoPagoItems,
             completeFormData,
+            order.id
           )
           
           // Redirect to MercadoPago payment page
@@ -357,7 +374,7 @@ export default function CheckoutPage() {
         }
       } else {
         // Proceed with  other payment methods (create order directly)
-          const order = await createOrderFromCart({ items: cartItems, total }, completeFormData)
+          const order = await createOrderFromCart(completeFormData)
         
           toast.success("¡Orden creada con éxito!")
           clearCart()
@@ -688,7 +705,7 @@ export default function CheckoutPage() {
             
             {/* Submit Button */}
             <Button type="submit" className="w-full bg-pink-500 hover:bg-pink-600" disabled={isSubmitting}>
-              {isSubmitting ? "Procesando..." : "Reservar Ahora"}
+              {isSubmitting ? "Procesando..." : "Pagar Ahora"}
             </Button>
           </form>
 

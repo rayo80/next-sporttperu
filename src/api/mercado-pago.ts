@@ -1,19 +1,21 @@
+import { CheckoutFormData } from '@/types/checkout';
 
 import axios from "axios"
 
 
 export const mercadopagoService = {
-    createPreference: async (items: any[], externalReference: any): Promise<string> => {
-      console.log('aqui en service', items, externalReference)
+    createPreference: async (items: any[], checkoutFormData: any, orderId: string): Promise<string> => {
+      console.log('aqui en service', items, checkoutFormData)
         try {
         const response = await axios.post(`/api/mp-preference`, {
           items,
-          external_reference: externalReference,
-        //   back_urls: {
-        //     success: `${API_URL}/checkout/success`,
-        //     failure: `${API_URL}/checkout/failure`,
-        //     pending: `${API_URL}/checkout/pending`,
-        //   },
+          checkoutFormData,
+          orderId,
+          // back_urls: {
+          //   success: `${NEXT_PUBLIC_HOST}/checkout/success`,
+          //   failure: `${NEXT_PUBLIC_HOST}/checkout/failure`,
+          //   pending: `${NEXT_PUBLIC_HOST}/checkout/pending`,
+          // },
         })
         console.log('response', response)
         return response.data.init_point

@@ -16,7 +16,7 @@ interface OrderContextType {
   isLoading: boolean
   orders: Order[]
   error: OrderError | null
-  createOrderFromCart: (cartState: CartState, checkoutData: CheckoutFormData) => Promise<Order>
+  createOrderFromCart: (checkoutData: CheckoutFormData) => Promise<Order>
   clearOrder: () => void
   getOrder: (orderId: string) => Promise<Order>
   fetchOrders: () => Promise<void>
@@ -34,7 +34,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
 
   const createOrderFromCart = useCallback(
-    async (cartState: CartState, 
+    async (
       checkoutData: CheckoutFormData): Promise<Order> => {
       setIsLoading(true)
       setError(null)

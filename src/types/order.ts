@@ -1,3 +1,4 @@
+import { OrderFinancialStatus } from "./commom"
 
 export interface OrderCustomer {
   id: string
@@ -139,6 +140,7 @@ export interface Order {
     subtotalPrice: number
     totalTax: number
     totalDiscounts: number
+    paymentStatus?: OrderFinancialStatus
     lineItems: CreateOrderLineItem[]
     shippingAddressId?: string | null
     billingAddressId?: string | null
