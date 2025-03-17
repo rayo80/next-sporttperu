@@ -1,3 +1,5 @@
+import { Timestamps } from "./commom"
+
 export interface Address {
   id: string
   company: string
@@ -10,7 +12,7 @@ export interface Address {
   phone: string
 }
 
-export interface Customer {
+export interface Customer  extends Timestamps{
   id: string
   firstName: string
   lastName: string

@@ -46,7 +46,7 @@ export function SiteHeader() {
           <Link href="/" className="flex-shrink-0">
             <Image
               src="/assets/logo.png"
-              alt="SPORT T"
+              alt="SPORTT"
               width={200}
               height={50}
               className="h-auto w-auto"
@@ -178,7 +178,7 @@ export function SiteHeader() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link href="/contact" legacyBehavior passHref>
+                  <Link href="/contacto" legacyBehavior passHref>
                     <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-800 hover:text-white">
                       Contacto
                     </NavigationMenuLink>

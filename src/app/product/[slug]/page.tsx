@@ -29,6 +29,7 @@ import { toast } from "sonner"
 import { CurrencySelector } from "@/components/currency-selector"
 import { useShop } from "@/contexts/shop.context"
 import { useRouter } from "next/navigation"
+import { RelatedProducts } from "@/components/related-products"
 interface ColorOption {
   id: string
   label: string
@@ -43,7 +44,7 @@ interface VariantAttributeGroup {
 }
 
 const generateUrl = (url: string) => {
-  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  return url;
 }
 
 const colorOptions: ColorOption[] = [
@@ -518,7 +519,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
         </div>
         </div>
         
-
+        {product && <RelatedProducts currentProduct={product} />}
 
       </main>
       <SiteFooter />

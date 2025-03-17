@@ -102,8 +102,8 @@ export default function CartPage() {
       return [
         productName,
         item.quantity,
-        `${currency.symbol} ${getPrice(item).toFixed(2)}`,
-        `${currency.symbol} ${(item.quantity * getPrice(item)).toFixed(2)}`,
+        `${currency?.symbol} ${getPrice(item).toFixed(2)}`,
+        `${currency?.symbol} ${(item.quantity * getPrice(item)).toFixed(2)}`,
       ];
     });
   
@@ -161,10 +161,10 @@ export default function CartPage() {
   
     // Agregar montos
     doc.setFont("helvetica", "normal");
-    doc.text(`${currency.symbol} ${subtotal.toFixed(2)}`, pageWidth - 25, finalY + 10, { align: "right" });
-    doc.text(`${currency.symbol} ${iva.toFixed(2)}`, pageWidth - 25, finalY + 20, { align: "right" });
+    doc.text(`${currency?.symbol} ${subtotal.toFixed(2)}`, pageWidth - 25, finalY + 10, { align: "right" });
+    doc.text(`${currency?.symbol} ${iva.toFixed(2)}`, pageWidth - 25, finalY + 20, { align: "right" });
     doc.setFont("helvetica", "bold");
-    doc.text(`${currency.symbol} ${finalTotal.toFixed(2)}`, pageWidth - 25, finalY + 30, { align: "right" });
+    doc.text(`${currency?.symbol} ${finalTotal.toFixed(2)}`, pageWidth - 25, finalY + 30, { align: "right" });
   
     // Nota de validez (comentada, personalizar según sea necesario)
     /*
@@ -247,7 +247,7 @@ export default function CartPage() {
                         <td className="p-4">
                           <div className="w-24 h-24 relative">
                             <Image
-                              src={validUrl(item.product.imageUrls[0])}
+                              src={item.product.imageUrls[0]}
                               alt={item.variant.title}
                               fill
                               className="object-contain"

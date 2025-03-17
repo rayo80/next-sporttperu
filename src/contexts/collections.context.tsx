@@ -5,6 +5,7 @@ import { productService } from '@/api/products';
 import { Product } from '@/types/product';
 import { Category } from '@/types/category';
 import { collectionsService } from '@/api/collections';
+import { Collection } from '@/types/collections';
 
 
 

@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "./product-card"
 import { Product } from "@/types/product"
+import { motion, AnimatePresence } from "framer-motion"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface ProductSliderProps {
   products: Product[]
@@ -13,9 +15,15 @@ interface ProductSliderProps {
     [key: string]: number
   }
   compact?: boolean
+  isLoading?: boolean
 }
 
-export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 4, xl: 4 }, compact = false }  : ProductSliderProps) {
+export function ProductSlider({ 
+  products = [], 
+  breakpoints = { sm: 1, md: 2, lg: 4, xl: 4 }, 
+  compact = false,
+  isLoading = false
+}: ProductSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
@@ -31,7 +39,7 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 4, x
 
   const prevSlide = () => {
     setCurrentIndex((prev) => 
-      prev - 1 < 0 ? products.length - productsPerView  : prev - 1
+      prev - 1 < 0 ? products.length - productsPerView : prev - 1
     )
   }
 
@@ -113,8 +121,62 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 4, x
     return () => window.removeEventListener('resize', handleResize)
   }, [breakpoints])
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 24
+      }
+    }
+  }
+
+  // Render skeleton loading state
+  if (isLoading) {
+    return (
+      <div className="relative overflow-hidden">
+        <motion.div 
+          className="flex gap-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {Array(productsPerView).fill(0).map((_, idx) => (
+            <motion.div 
+              key={idx} 
+              className="flex-shrink-0 px-2"
+              style={{ width: `${100 / productsPerView}%`}}
+              variants={itemVariants}
+            >
+              <div className="border rounded-lg p-4 h-full">
+                <Skeleton className="w-full h-48 rounded-md mb-4" />
+                <Skeleton className="w-3/4 h-6 mb-2" />
+                <Skeleton className="w-1/2 h-4 mb-4" />
+                <Skeleton className="w-1/3 h-8" />
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
-    <div className="relative   overflow-hidden">
+    <div className="relative overflow-hidden">
       <div 
         ref={sliderRef}
         className="overflow-hidden touch-pan-x"
@@ -125,37 +187,71 @@ export function ProductSlider({ products, breakpoints = { sm: 1, md: 2, lg: 4, x
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
       >
-        <div 
-          className="flex transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${currentIndex * (100 / productsPerView)}%)` }}
+        <motion.div 
+          className="flex"
+          initial={false}
+          animate={{
+            x: `-${currentIndex * (100 / productsPerView)}%`
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            mass: 1
+          }}
         >
-          {products.map((product, idx) => (
-            <div 
-              key={idx} 
-              className="flex-shrink-0 px-2"
-              style={{ width: `${100 / productsPerView}%`}}
-            >
-              <ProductCard product={product} compact={compact} />
-            </div>
-          ))}
-        </div>
+          <AnimatePresence>
+            {products.map((product, idx) => (
+              <motion.div 
+                key={product.id || idx} 
+                className="flex-shrink-0 px-2"
+                style={{ width: `${100 / productsPerView}%`}}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: {
+                    delay: idx * 0.05,
+                    duration: 0.5
+                  }
+                }}
+              >
+                <ProductCard product={product} compact={compact} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </div>
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-md"
-        onClick={prevSlide}
+      
+      <motion.div
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3 }}
       >
-        <ChevronLeft className="h-5 w-5 text-gray-800" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-md"
-        onClick={nextSlide}
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-md"
+          onClick={prevSlide}
+        >
+          <ChevronLeft className="h-5 w-5 text-gray-800" />
+        </Button>
+      </motion.div>
+      
+      <motion.div
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3 }}
       >
-        <ChevronRight className="h-5 w-5 text-gray-800" />
-      </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-md"
+          onClick={nextSlide}
+        >
+          <ChevronRight className="h-5 w-5 text-gray-800" />
+        </Button>
+      </motion.div>
     </div>
   )
 }

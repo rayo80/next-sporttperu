@@ -17,9 +17,9 @@ interface ProductCardProps {
   compact?: boolean
 }
 
-const generate_url = (url: string) => {
-  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
-}
+// const generate_url = (url: string) => {
+//   return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+// }
 
 export function ProductCard({
   product,
@@ -30,9 +30,9 @@ export function ProductCard({
   
   const { title, slug, imageUrls, status, variants } = product
   
-  const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? generate_url(imageUrls[0])
-    : "/assets/image.png";
+  // const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
+  //   ? generate_url(imageUrls[0])
+  //   : "/assets/image.png";
   const defaultVariant = variants[0]
 
   
@@ -67,15 +67,16 @@ export function ProductCard({
             "relative overflow-hidden w-full",
             compact ? "aspect-[3/4] p-2" : "aspect-square p-6"
           )}>
-            <Image
-              src={validUrl}
+            {imageUrls[0] && <Image
+              src={imageUrls[0]}
               alt={title}
               fill
               className="object-contain p-2 shadow-md"
               sizes="transition-transform duration-300 group-hover:scale-105 
               (max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               quality={95}
-            />
+            />}
+            
             {/* {isOutOfStock && (
               <Badge variant="destructive" className="absolute top-2 left-2">
                 AGOTADO

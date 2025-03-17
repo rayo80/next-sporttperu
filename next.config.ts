@@ -1,25 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'sporttnest.emetstudio.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.shopify.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'hebbkx1anhila5yf.public.blob.vercel-storage.com',
-      },
-    ],
-  },
-  env: {
-    BASE_IMAGE_URL: 'https://sporttnest.emetstudio.com',
+    domains: ["pub-a15fad1bb05e4ecbb92c9d83b643a721.r2.dev","clefastnest.emetstudio.com","cdn.shopify.com","  sporttnest.emetstudio.com"], // Reemplaza "example.com" con el dominio de tus imágenes
   },
 };
 

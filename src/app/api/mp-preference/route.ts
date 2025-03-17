@@ -1,6 +1,6 @@
 import { CheckoutFormData } from '@/types/checkout';
 import MercadoPagoConfig, { Preference } from "mercadopago";
-import { NextResponse } from "next/server"
+import { NextResponse } from 'next/server';
 
 
 // Initialize MercadoPago with your access token
