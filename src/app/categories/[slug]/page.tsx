@@ -52,7 +52,7 @@ const filterOptions = {
   ],
 }
 
-export default function CategoriesPage({ params }: { params: { slug: string } }) {
+export default function CategoriesPage({ params }: { params: Promise<{ slug: string }> }) {
   const rparams = useParams<{ slug: string }>()
   const { availableProducts: products, isLoading, error, getProducts } = useProducts()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
