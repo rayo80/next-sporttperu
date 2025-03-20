@@ -20,7 +20,7 @@ import { CartItem, CartItemModel } from "@/types/cart"
 import Link from "next/link"
 import { CreateCustomerDto } from "@/types/customer"
 import { useOrder } from "@/contexts/order.context"
-import { mercadopagoService } from "@/services/mercado-pago"
+
 import { VariantPrice, VariantPriceModel } from "@/types/product"
 import { useShop } from "@/contexts/shop.context"
 import { usePaymentProvider } from "@/contexts/payment-provider.context"
@@ -28,6 +28,7 @@ import { PaymentProvider, PaymentProviderType } from "@/types/payment-provider"
 import { useShippingMethod } from "@/contexts/shipping-method.context"
 import { CheckoutFormData } from "@/types/checkout"
 import { OrderFinancialStatus } from "@/types/commom"
+import { mercadopagoService } from "@/services/mercado-pago"
 
 interface FormErrors {
   email?: string
@@ -421,7 +422,7 @@ export default function CheckoutPage() {
                   <Input
                     type="email"
                     name="email"
-                    value={customer ? customer.email : formData.customer.email}
+                    value={customer?.email ?? formData.customer.email ?? ""}
                     onChange={handleInputChange}
                     placeholder="Email"
                     className={`w-full ${formErrors.email ? "border-red-500" : ""}`}
