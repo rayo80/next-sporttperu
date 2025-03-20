@@ -47,8 +47,15 @@ const BreadcrumbLink = React.forwardRef<
   }
 >(({ asChild, className, ...props }, ref) => {
   const Comp = asChild ? Link : "a"
-  return (
-    <Comp
+  return asChild ? (
+    <Link
+      ref={ref}
+      className={cn("transition-colors hover:text-foreground", className)}
+      {...props}
+      href={props.href || "#"}
+    />
+  ) : (
+    <a
       ref={ref}
       className={cn("transition-colors hover:text-foreground", className)}
       {...props}
