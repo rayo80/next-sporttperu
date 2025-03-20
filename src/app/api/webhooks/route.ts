@@ -9,7 +9,7 @@ import { Customer } from "@/types/customer";
 import { OrderFinancialStatus } from '@/types/commom';
 
 
-export const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN!});
+const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN!});
 
 export async function POST(request: Request) {
   try {
