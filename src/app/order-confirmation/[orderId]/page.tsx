@@ -13,7 +13,7 @@ import { use } from "react"
 import { useOrder } from "@/contexts/order.context"
 
 const generateUrl = (url: string) => {
-    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+    return url;
   }
 
 export default function OrderConfirmationPage({ params }: { params: Promise<{ orderId: string }> }) {
@@ -41,7 +41,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
   }, [resolvedParams.orderId, getOrder])
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading order details...</div>
+    return <div className="flex justify-center items-center h-screen">Cargando detalles de la Orden...</div>
   }
 
   if (error) {
@@ -57,15 +57,15 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
-          <h1 className="mt-3 text-3xl font-extrabold text-gray-900">Thank you for your order!</h1>
+          <h1 className="mt-3 text-3xl font-extrabold text-gray-900">Gracias por tu Pedido!</h1>
           <p className="mt-2 text-lg text-gray-600">
-            Your order #{order.orderNumber} has been placed and is being processed.
+            Tu pedido #{order.orderNumber} ha sido recibido y esta siendo procesado.
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Order Summary</CardTitle>
+            <CardTitle>Resumen</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -75,7 +75,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
                   <li key={item.id} className="py-4 flex items-center space-x-4">
                     <div className="flex-shrink-0 h-16 w-16 relative">
                       <Image
-                        src={generateUrl(item.variant.imageUrl) || "/placeholder.svg"}
+                        src={item.variant.imageUrl || "/placeholder.svg"}
                         alt={item.title}
                         fill
                         className="rounded-md object-cover"
@@ -83,7 +83,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                      <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                      <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
                     </div>
                     <div className="flex-shrink-0 text-sm font-medium text-gray-900">
                       {order.currency.symbol} {(Number(item.price) * item.quantity).toFixed(2)}
@@ -126,7 +126,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
             <Separator />
 
             <div className="space-y-2">
-              <h3 className="text-lg font-medium">Shipping Information</h3>
+              <h3 className="text-lg font-medium">Direccioon de Envio</h3>
               <p className="text-sm text-gray-600">
                 {order.customer.firstName} {order.customer.lastName}
                 <br />
@@ -142,7 +142,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
             <Separator />
 
             {order.shippingMethod && (<div className="space-y-2">
-              <h3 className="text-lg font-medium">Shipping Method</h3>
+              <h3 className="text-lg font-medium">Metodo de Envio</h3>
               <p className="text-sm text-gray-600">
                 {order.shippingMethod.name} - {order.shippingMethod.estimatedDeliveryTime}
               </p>
@@ -151,7 +151,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
             <Separator />
 
             {order.paymentProvider && (<div className="space-y-2">
-              <h3 className="text-lg font-medium">Payment Information</h3>
+              <h3 className="text-lg font-medium">Informacion del Pago</h3>
               <p className="text-sm text-gray-600">
                 Payment Method: {order.paymentProvider?.name}
                 <br />
@@ -163,7 +163,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
               <>
                 <Separator />
                 <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Order Notes</h3>
+                  <h3 className="text-lg font-medium">Notas de Pedido</h3>
                   <p className="text-sm text-gray-600">{order.customerNotes}</p>
                 </div>
               </>
@@ -173,7 +173,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
               <>
                 <Separator />
                 <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Preferred Delivery Date</h3>
+                  <h3 className="text-lg font-medium">Fecha de envio por defecto</h3>
                   <p className="text-sm text-gray-600">{new Date(order.preferredDeliveryDate).toLocaleDateString()}</p>
                 </div>
               </>
@@ -183,12 +183,12 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
             <Button variant="outline" asChild>
               <Link href="/" className="inline-flex items-center">
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Continue Shopping
+                Continua Comprando
               </Link>
             </Button>
             <Button asChild>
               {/* <Link href="/account/orders">View All Orders</Link> */}
-              <Link href="/">View All Orders</Link>
+              <Link href="/">Ver todas mis ordenes</Link>
             </Button>
           </CardFooter>
         </Card>

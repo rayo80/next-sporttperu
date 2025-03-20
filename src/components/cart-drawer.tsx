@@ -19,7 +19,7 @@ interface CartDrawerProps {
 }
 
 const generate_url = (url: string) => {
-  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  return url;
 }
 
 

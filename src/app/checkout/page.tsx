@@ -38,13 +38,10 @@ interface FormErrors {
   province?: string
   phone?: string
 }
-const generateUrl = (url: string) => {
-  return `${process.env.NEXT_PUBLIC_API}/uploads/${url}`;
-}
 
 const defaultImage = (imageUrls: string[]) => {
   return imageUrls && imageUrls.length > 0 && imageUrls[0]
-  ? generateUrl(imageUrls[0])
+  ? imageUrls[0]
   : "/assets/image.png";
 }
 

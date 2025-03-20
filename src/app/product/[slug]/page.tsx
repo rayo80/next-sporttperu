@@ -79,17 +79,7 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   // params = React.use(params)
 
   const product = getProductSlug(rparams.slug)
-  const imageUrls = product?.imageUrls
 
-  const defaultImage = (imageUrls: string[]) => {
-    return imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? generateUrl(imageUrls[0])
-    : "/assets/image.png";
-  }
-  const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? generateUrl(imageUrls[0])
-    : "/assets/image.png";
-    
   const productImages = product?.imageUrls.length ? product.imageUrls : ["/placeholdes.svg"]
 
   const nextImage = () => {

@@ -201,13 +201,9 @@ export default function CartPage() {
   }
   
   const validUrl = (imagePath: any) => {
-    return imagePath ? `${process.env.BASE_IMAGE_URL}/uploads/${imagePath}` : '/default-image.png';
+    return imagePath ? imagePath : "/placeholdes.svg";
   }
 
-  const handleUpdateCart = () => {
-    // In a real app, this would sync with the backend
-    console.log("Cart updated")
-  }
 
   return (
     <>
