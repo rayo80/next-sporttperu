@@ -1,10 +1,10 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
-import { productService } from '@/api/products';
+import { productService } from '@/services/products';
 import { Product } from '@/types/product';
 import { Category } from '@/types/category';
-import { categoryService } from '@/api/categories';
+import { categoryService } from '@/services/categories';
 
 export interface CreateCategoryDto {
     title: string;

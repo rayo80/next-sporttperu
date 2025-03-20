@@ -1,6 +1,6 @@
 "use client"
 
-import { shippingMethodService } from "@/api/shipping-method"
+import { shippingMethodService } from "@/services/shipping-method"
 import { ShippingMethod } from "@/types/shipping-method"
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useMemo } from "react"

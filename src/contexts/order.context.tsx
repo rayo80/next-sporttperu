@@ -4,10 +4,10 @@ import { createContext, useContext, useState, useCallback } from "react"
 import type { Order, CreateOrderDto, OrderError } from "@/types/order"
 import type { CartState } from "@/types/cart"
 import type { Customer, CreateCustomerDto } from "@/types/customer"
-import { customerService } from "@/api/customers"
+import { customerService } from "@/services/customers"
 import { useCart } from "./cart.context"
 import { useAuth } from "./auth.context"
-import { orderService } from "@/api/order"
+import { orderService } from "@/services/order"
 import { CheckoutFormData } from "@/types/checkout"
 
 

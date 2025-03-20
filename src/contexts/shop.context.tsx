@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import type { ShopConfig } from "@/types/shop"
-import { shopService } from "@/api/shop"
+import { shopService } from "@/services/shop"
 import { Currency } from "@/types/product"
 
 

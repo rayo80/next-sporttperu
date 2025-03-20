@@ -1,7 +1,7 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
-import { productService } from '@/api/products';
+import { productService } from '@/services/products';
 import { Product } from '@/types/product';
 
 export interface CreateProductDto {

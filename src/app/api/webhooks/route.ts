@@ -1,10 +1,10 @@
 import { Order } from './../../../types/order';
 import { NextResponse } from "next/server"
 import { MercadoPagoConfig, Payment } from "mercadopago"
-import { orderService } from "../../../api/order"
+import { orderService } from "../../../services/order"
 import { CheckoutFormData } from "@/types/checkout";
 import { CreateOrderDto } from "@/types/order";
-import { customerService } from "@/api/customers";
+import { customerService } from "@/services/customers";
 import { Customer } from "@/types/customer";
 import { OrderFinancialStatus } from '@/types/commom';
 

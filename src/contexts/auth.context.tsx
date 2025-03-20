@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import { authService } from "@/api/auth"
+import { authService } from "@/services/auth"
 import { CreateCustomerDto, Customer } from "@/types/customer"
 
 

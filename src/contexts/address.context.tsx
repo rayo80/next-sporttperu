@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useCallback } from "react"
 
-import { addressService } from "@/api/address"
+import { addressService } from "@/services/address"
 import { Address, CreateAddressDto } from "@/types/address"
 
 

@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 
-import { paymentProviderService } from "@/api/payment-provider"
+import { paymentProviderService } from "@/services/payment-provider"
 import { PaymentProvider } from "@/types/payment-provider"
 import { useShop } from "./shop.context"
 
