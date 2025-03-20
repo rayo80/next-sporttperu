@@ -35,7 +35,7 @@ export default function AccountPage() {
         setFormData({
             firstName: customer.firstName,
             lastName: customer.lastName,
-            email: customer.email,
+            email: customer.email ?? "",
             phone: customer.phone,
         })
         }
