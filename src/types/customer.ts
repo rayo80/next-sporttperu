@@ -8,6 +8,7 @@ export interface Address {
   zip: string
   country: string
   phone: string
+  isDefault?: boolean
 }
 
 export interface Customer {

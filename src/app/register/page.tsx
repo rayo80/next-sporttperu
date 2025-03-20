@@ -47,6 +47,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     isRegistration: true,
+    acceptsMarketing: false,
     addresses: [
       {
         isDefault: true,
@@ -240,7 +241,7 @@ export default function RegisterPage() {
                     id="email"
                     name="email"
                     type="email"
-                    value={formData.email}
+                    value={formData.email ?? ""}
                     onChange={handleInputChange}
                     className={formErrors.email ? "border-red-500" : ""}
                   />
