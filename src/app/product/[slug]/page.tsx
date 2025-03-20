@@ -51,7 +51,7 @@ const colorOptions: ColorOption[] = [
   { id: "black", label: "Negro", value: "black", className: "bg-gray-700" },
 ]
 
-const ProductPage = ({ params }: { params: { slug: string } }) => {
+const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const [selectedAttributes, setSelectedAttributes] = useState<{ 
     [key: string]: string }>({})
   const rparams = useParams<{slug: string }>()
