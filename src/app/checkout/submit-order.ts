@@ -6,15 +6,18 @@ export async function submitOrder(formData: FormData) {
     // Create shipping address
     const shippingAddress: OrderAddress = {
       id: `addr_${Date.now()}`,
-      firstName: formData.get("firstName") as string,
-      lastName: formData.get("lastName") as string,
       address1: formData.get("address") as string,
       address2: (formData.get("apartment") as string) || undefined,
       city: formData.get("city") as string,
-      state: formData.get("region") as string,
-      postalCode: formData.get("postalCode") as string,
       country: "PE",
       phone: formData.get("phone") as string,
+      isDefault: false,
+      company: "",
+      province: "",
+      zip: "",
+      customerId: "",
+      createdAt: "",
+      updatedAt: ""
     }
 
     // Return the shipping address to be used by the client component
