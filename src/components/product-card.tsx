@@ -17,8 +17,12 @@ interface ProductCardProps {
   compact?: boolean
 }
 
+// const generate_url = (url: string) => {
+//   return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+// }
+
 const generate_url = (url: string) => {
-  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  return url;
 }
 
 export function ProductCard({

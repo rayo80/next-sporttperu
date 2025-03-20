@@ -42,8 +42,12 @@ interface VariantAttributeGroup {
   available: { [key: string]: boolean }
 }
 
+// const generateUrl = (url: string) => {
+//   return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+// }
+
 const generateUrl = (url: string) => {
-  return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  return url;
 }
 
 const colorOptions: ColorOption[] = [
@@ -73,7 +77,6 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const {selectedCurrency} = useShop()
 
   // params = React.use(params)
-  console.log('rparams', rparams)
 
   const product = getProductSlug(rparams.slug)
   const imageUrls = product?.imageUrls

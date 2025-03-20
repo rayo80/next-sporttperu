@@ -30,10 +30,13 @@ export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
     }
   }
 
-  const generate_url = (url: string) => {
-    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
-  }
+  // const generate_url = (url: string) => {
+  //   return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+  // }
 
+  const generate_url = (url: string) => {
+    return url;
+  }
 
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
     ? generate_url(imageUrls[0])
