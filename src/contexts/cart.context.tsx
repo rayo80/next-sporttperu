@@ -20,7 +20,7 @@ const initialState: CartState = {
   total: 0,
 }
 
-function calculateTotal(items: CartItem[] = [], selectedCurrency: Currency | undefined): number {
+function calculateTotal(items: CartItem[] = [], selectedCurrency: Currency | null): number {
   console.log("Calculando total", items)
   return items.reduce((total, item) => {
     const priceObject = item.variant.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
@@ -111,7 +111,7 @@ interface CartContextType extends CartState {
   removeItem: (varianId: string) => void
   updateQuantity: (variantId: string, quantity: number) => void
   clearCart: () => void
-  currency: Currency | undefined
+  currency: Currency | null
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)

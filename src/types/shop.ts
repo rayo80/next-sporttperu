@@ -1,3 +1,4 @@
+import { Currency } from "./product"
 
   export interface ShopConfig {
     id: string

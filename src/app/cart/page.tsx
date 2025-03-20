@@ -28,6 +28,8 @@ export default function CartPage() {
   const [date, setDate] = useState<Date>()
   const [specialInstructions, setSpecialInstructions] = useState("")
   const { shopConfig } = useShop()
+
+
   const handleQuantityChange = (slug: string, newQuantity: number) => {
     if (newQuantity >= 0) {
       updateQuantity(slug, newQuantity)
@@ -102,8 +104,8 @@ export default function CartPage() {
       return [
         productName,
         item.quantity,
-        `${currency.symbol} ${getPrice(item).toFixed(2)}`,
-        `${currency.symbol} ${(item.quantity * getPrice(item)).toFixed(2)}`,
+        `${currency?.symbol ?? 'X'} ${getPrice(item).toFixed(2)}`,
+        `${currency?.symbol ?? 'X'} ${(item.quantity * getPrice(item)).toFixed(2)}`,
       ];
     });
   
@@ -161,10 +163,10 @@ export default function CartPage() {
   
     // Agregar montos
     doc.setFont("helvetica", "normal");
-    doc.text(`${currency.symbol} ${subtotal.toFixed(2)}`, pageWidth - 25, finalY + 10, { align: "right" });
-    doc.text(`${currency.symbol} ${iva.toFixed(2)}`, pageWidth - 25, finalY + 20, { align: "right" });
+    doc.text(`${currency?.symbol} ${subtotal.toFixed(2)}`, pageWidth - 25, finalY + 10, { align: "right" });
+    doc.text(`${currency?.symbol} ${iva.toFixed(2)}`, pageWidth - 25, finalY + 20, { align: "right" });
     doc.setFont("helvetica", "bold");
-    doc.text(`${currency.symbol} ${finalTotal.toFixed(2)}`, pageWidth - 25, finalY + 30, { align: "right" });
+    doc.text(`${currency?.symbol} ${finalTotal.toFixed(2)}`, pageWidth - 25, finalY + 30, { align: "right" });
   
     // Nota de validez (comentada, personalizar según sea necesario)
     /*
