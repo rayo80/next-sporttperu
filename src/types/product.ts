@@ -1,4 +1,5 @@
 import { Category } from "./category"
+import { Collection } from "./collections"
 
 export interface Currency {
   id: string
