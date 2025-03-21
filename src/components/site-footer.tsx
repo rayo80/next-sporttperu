@@ -56,17 +56,17 @@ export function SiteFooter() {
             <h3 className="text-lg font-semibold">Información</h3>
             <ul className="space-y-4 text-sm">
               <li>
-                <Link href="/privacy-policy" className="hover:text-pink-500 transition-colors">
+                <Link href="/privacidad" className="hover:text-pink-500 transition-colors">
                   Política de Privacidad
                 </Link>
               </li>
               <li>
-                <Link href="/refund-policy" className="hover:text-pink-500 transition-colors">
-                  Política de Reembolso
+                <Link href="/reclamaciones" className="hover:text-pink-500 transition-colors">
+                  Libro de Reclamaciones
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-pink-500 transition-colors">
+                <Link href="/terminos-y-condiciones" className="hover:text-pink-500 transition-colors">
                   Términos y Condiciones
                 </Link>
               </li>

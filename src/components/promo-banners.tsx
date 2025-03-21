@@ -4,7 +4,7 @@ import Link from "next/link"
 const promos = [
   {
     image: "/assets/prom1.png",
-    url: "#",
+    url: "/product/dignic-09c",
     gradient: " ",
   },
   {

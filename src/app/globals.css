@@ -123,3 +123,39 @@ html, body, h1 {
     @apply bg-background text-foreground;
   }
 }
+
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* Esto hace que la barra de desplazamiento se superponga al contenido */
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: overlay;
+}
+
+/* Fallback para navegadores que no soportan overlay */
+@supports not (overflow: overlay) {
+  html,
+  body {
+    overflow-y: auto;
+  }
+}
+

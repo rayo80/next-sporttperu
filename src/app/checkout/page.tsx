@@ -1148,7 +1148,7 @@ export default function CheckoutPage() {
                           <Label htmlFor={provider.id} className="flex-1">
                             <div className="flex items-center justify-between">
                               <span>
-                                {provider.name} {provider.type}
+                                {provider.name} 
                               </span>
                             </div>
                           </Label>

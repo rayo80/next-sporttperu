@@ -11,10 +11,8 @@ import { Separator } from "@/components/ui/separator"
 import type { Order } from "@/types/order"
 import { use } from "react"
 import { useOrder } from "@/contexts/order.context"
-
-const generateUrl = (url: string) => {
-    return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
-  }
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 
 export default function OrderConfirmationPage({ params }: { params: Promise<{ orderId: string }> }) {
   const resolvedParams = use(params)
@@ -30,7 +28,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
         const fetchedOrder = await getOrder(resolvedParams.orderId)
         setOrder(fetchedOrder)
       } catch (err) {
-        setError("Failed to fetch order details. Please try again later.")
+        setError("Error al cargar los detalles del pedido. Por favor, inténtalo más tarde.")
         console.error("Error fetching order:", err)
       } finally {
         setIsLoading(false)
@@ -41,7 +39,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
   }, [resolvedParams.orderId, getOrder])
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading order details...</div>
+    return <div className="flex justify-center items-center h-screen">Cargando detalles del pedido...</div>
   }
 
   if (error) {
@@ -49,150 +47,161 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
   }
 
   if (!order) {
-    return <div className="flex justify-center items-center h-screen">Order not found</div>
+    return <div className="flex justify-center items-center h-screen">Pedido no encontrado</div>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
-          <h1 className="mt-3 text-3xl font-extrabold text-gray-900">Thank you for your order!</h1>
-          <p className="mt-2 text-lg text-gray-600">
-            Your order #{order.orderNumber} has been placed and is being processed.
-          </p>
+    <>
+      <SiteHeader />
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
+            <h1 className="mt-3 text-3xl font-extrabold text-gray-900">¡Gracias por tu pedido!</h1>
+            <p className="mt-2 text-lg text-gray-600">
+              Tu pedido #{order.orderNumber} ha sido registrado y está siendo procesado.
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumen del Pedido</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium">Productos</h3>
+                <ul className="mt-2 divide-y divide-gray-200">
+                  {order.lineItems.map((item) => (
+                    <li key={item.id} className="py-4 flex items-center space-x-4">
+                      <div className="flex-shrink-0 h-16 w-16 relative">
+                        <Image
+                          src={item.variant.imageUrl || "/placeholder.svg"}
+                          alt={item.title}
+                          fill
+                          className="rounded-md object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                        <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
+                      </div>
+                      <div className="flex-shrink-0 text-sm font-medium text-gray-900">
+                        {order.currency.symbol} {(Number(item.price) * item.quantity).toFixed(2)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Subtotal</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {order.currency.symbol} {Number(order.subtotalPrice).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Impuestos</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {order.currency.symbol} {Number(order.totalTax).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Envío</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {order.currency.symbol}{" "}
+                    {(Number(order.totalPrice) - Number(order.subtotalPrice) - Number(order.totalTax)).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2">
+                  <span className="text-base font-medium text-gray-900">Total</span>
+                  <span className="text-base font-medium text-gray-900">
+                    {order.currency.symbol} {Number(order.totalPrice).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Información de Envío</h3>
+                <p className="text-sm text-gray-600">
+                  {order.customer.firstName} {order.customer.lastName}
+                  <br />
+                  {order.shippingAddress.address1}
+                  {order.shippingAddress.address2 && <>, {order.shippingAddress.address2}</>}
+                  <br />
+                  {order.shippingAddress.city}, {order.shippingAddress.province} {order.shippingAddress.zip}
+                  <br />
+                  {order.shippingAddress.country}
+                </p>
+              </div>
+
+              <Separator />
+
+              {order.shippingMethod && (
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Método de Envío</h3>
+                  <p className="text-sm text-gray-600">
+                    {order.shippingMethod.name} - {order.shippingMethod.estimatedDeliveryTime}
+                  </p>
+                </div>
+              )}
+
+              <Separator />
+
+              {order.paymentProvider && (
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Información de Pago</h3>
+                  <p className="text-sm text-gray-600">
+                    Método de Pago: {order.paymentProvider?.name}
+                    <br />
+                    Estado del Pago: {order.paymentStatus}
+                  </p>
+                </div>
+              )}
+
+              {order.customerNotes && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Notas del Pedido</h3>
+                    <p className="text-sm text-gray-600">{order.customerNotes}</p>
+                  </div>
+                </>
+              )}
+
+              {order.preferredDeliveryDate && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Fecha de Entrega Preferida</h3>
+                    <p className="text-sm text-gray-600">
+                      {new Date(order.preferredDeliveryDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" asChild>
+                <Link href="/" className="inline-flex items-center">
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Continuar Comprando
+                </Link>
+              </Button>
+              <Button asChild>
+                {/* <Link href="/account/orders">Ver Todos los Pedidos</Link> */}
+                <Link href="/">Ver Todos los Pedidos</Link>
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Order Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium">Items</h3>
-              <ul className="mt-2 divide-y divide-gray-200">
-                {order.lineItems.map((item) => (
-                  <li key={item.id} className="py-4 flex items-center space-x-4">
-                    <div className="flex-shrink-0 h-16 w-16 relative">
-                      <Image
-                        src={generateUrl(item.variant.imageUrl) || "/placeholder.svg"}
-                        alt={item.title}
-                        fill
-                        className="rounded-md object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                      <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
-                    </div>
-                    <div className="flex-shrink-0 text-sm font-medium text-gray-900">
-                      {order.currency.symbol} {(Number(item.price) * item.quantity).toFixed(2)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Subtotal</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {order.currency.symbol} {Number(order.subtotalPrice).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Tax</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {order.currency.symbol} {Number(order.totalTax).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Shipping</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {order.currency.symbol}{" "}
-                  {(Number(order.totalPrice) - Number(order.subtotalPrice) - Number(order.totalTax)).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between pt-2">
-                <span className="text-base font-medium text-gray-900">Total</span>
-                <span className="text-base font-medium text-gray-900">
-                  {order.currency.symbol} {Number(order.totalPrice).toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Shipping Information</h3>
-              <p className="text-sm text-gray-600">
-                {order.customer.firstName} {order.customer.lastName}
-                <br />
-                {order.shippingAddress.address1}
-                {order.shippingAddress.address2 && <>, {order.shippingAddress.address2}</>}
-                <br />
-                {order.shippingAddress.city}, {order.shippingAddress.province} {order.shippingAddress.zip}
-                <br />
-                {order.shippingAddress.country}
-              </p>
-            </div>
-
-            <Separator />
-
-            {order.shippingMethod && (<div className="space-y-2">
-              <h3 className="text-lg font-medium">Shipping Method</h3>
-              <p className="text-sm text-gray-600">
-                {order.shippingMethod.name} - {order.shippingMethod.estimatedDeliveryTime}
-              </p>
-            </div>)}
-
-            <Separator />
-
-            {order.paymentProvider && (<div className="space-y-2">
-              <h3 className="text-lg font-medium">Payment Information</h3>
-              <p className="text-sm text-gray-600">
-                Payment Method: {order.paymentProvider?.name}
-                <br />
-                Payment Status: {order.paymentStatus}
-              </p>
-            </div>)}
-
-            {order.customerNotes && (
-              <>
-                <Separator />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Order Notes</h3>
-                  <p className="text-sm text-gray-600">{order.customerNotes}</p>
-                </div>
-              </>
-            )}
-
-            {order.preferredDeliveryDate && (
-              <>
-                <Separator />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Preferred Delivery Date</h3>
-                  <p className="text-sm text-gray-600">{new Date(order.preferredDeliveryDate).toLocaleDateString()}</p>
-                </div>
-              </>
-            )}
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" asChild>
-              <Link href="/" className="inline-flex items-center">
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Continue Shopping
-              </Link>
-            </Button>
-            <Button asChild>
-              {/* <Link href="/account/orders">View All Orders</Link> */}
-              <Link href="/">View All Orders</Link>
-            </Button>
-          </CardFooter>
-        </Card>
       </div>
-    </div>
+      <SiteFooter />
+    </>
   )
 }
+
