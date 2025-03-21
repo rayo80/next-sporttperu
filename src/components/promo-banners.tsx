@@ -4,7 +4,7 @@ import Link from "next/link"
 const promos = [
   {
     image: "/assets/prom1.png",
-    url: "#",
+    url: "/product/dignic-09c",
     gradient: " ",
   },
   {
@@ -28,7 +28,7 @@ export function PromoBanners() {
             {/* <div className={`absolute  inset-0 bg-gradient-to-br ${promo.gradient} opacity-90`} /> */}
 
             {/* Product Image */}
-            <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+            <div className="absolute inset-0   flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
               <Image
                 src={promo.image || "/placeholder.svg"}
                 alt={`${index}`}
