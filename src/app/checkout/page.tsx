@@ -29,6 +29,7 @@ import { useShippingMethod } from "@/contexts/shipping-method.context"
 import { CheckoutFormData } from "@/types/checkout"
 import { OrderFinancialStatus } from "@/types/commom"
 import { mercadopagoService } from "@/services/mercado-pago"
+import { SiteFooter } from "@/components/site-footer"
 
 interface FormErrors {
   email?: string
@@ -397,6 +398,7 @@ export default function CheckoutPage() {
 
   return (
     <>
+    <SiteHeader />
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid md:grid-cols-[1fr_400px] gap-8">
           {/* Left Column - Form */}
@@ -683,7 +685,7 @@ export default function CheckoutPage() {
                             <RadioGroupItem value={provider.id} id={provider.id} />
                             <Label htmlFor={provider.id} className="flex-1">
                               <div className="flex items-center justify-between">
-                                <span>{provider.name} {provider.type}</span>
+                                <span>{provider.name}</span>
                                 {/* Aquí puedes agregar iconos o información adicional del proveedor */}
                               </div>
                             </Label>
@@ -713,7 +715,7 @@ export default function CheckoutPage() {
               {itemModels.map((item) => (
                 <div key={item.variant.id} className="flex gap-4">
                   <div className="relative w-20 h-20 bg-white rounded-lg border overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-gray-500 text-white w-5 h-5 flex items-center justify-center rounded-bl-lg text-xs">
+                    <div className="absolute top-0 right-0 z-[10] bg-gray-500 text-white w-5 h-5 flex items-center justify-center rounded-bl-lg text-xs">
                       {item.quantity}
                     </div>
                     <Image
@@ -785,6 +787,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
+      <SiteFooter />
     </>
   )
 }

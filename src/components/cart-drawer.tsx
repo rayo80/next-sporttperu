@@ -18,15 +18,16 @@ interface CartDrawerProps {
   onOpenChange: (open: boolean) => void
 }
 
-const generate_url = (url: string) => {
-  return url;
-}
+// const generate_url = (url: string) => {
+//   return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
+// }
 
 
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const { selectedCurrency } = useShop()
   const { items, total, removeItem, updateQuantity } = useCart()
   const itemModels = items.map((i) => new CartItemModel(i));
+ 
 
 
   const getPrice = (item: CartItemModel) => {
@@ -63,7 +64,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   <li key={item.variant.id} className="flex py-4 animate-in slide-in-from-right">
                     <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
                       <Image
-                        src={generate_url(item.product.imageUrls[0])}
+                        src={item.product.imageUrls[0]}
                         alt={item.product.title}
                         width={100}
                         height={100}
