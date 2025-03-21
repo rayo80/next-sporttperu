@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import api from './base';
+import { Collection } from '@/types/collections';
 
 
 
