@@ -1,10 +1,11 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
-import { productService } from '@/services/products';
+import { productService } from '@/api/products';
 import { Product } from '@/types/product';
 import { Category } from '@/types/category';
-import { collectionsService } from '@/services/collections';
+import { collectionsService } from '@/api/collections';
+import { Collection } from '@/types/collections';
 
 
 
