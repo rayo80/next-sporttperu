@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 // Initialize MercadoPago with your access token
 const NEXT_PUBLIC_HOST = process.env.NEXT_PUBLIC_HOST || 'http://localhost:3000'
 
-export const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN!});
+const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN!});
 
 export async function POST(request: Request) {
   try {
