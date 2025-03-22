@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Truck, Store } from 'lucide-react'
+import { Truck, Store, Currency } from 'lucide-react'
 import { SiteHeader } from "@/components/site-header"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -345,6 +345,7 @@ export default function CheckoutPage() {
             description: item.title,
             unit_price: item.price,
             quantity: item.quantity,
+            currency_id: selectedCurrency?.code,
           }))
           
           // const checkoutMPFormData: CheckoutFormData = {
