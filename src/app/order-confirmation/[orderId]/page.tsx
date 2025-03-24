@@ -188,7 +188,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
             </Button>
             <Button asChild>
               {/* <Link href="/account/orders">View All Orders</Link> */}
-              <Link href="/">Ver todas mis ordenes</Link>
+              <Link href="/account/orders">Ver todas mis ordenes</Link>
             </Button>
           </CardFooter>
         </Card>

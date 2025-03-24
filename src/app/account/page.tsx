@@ -12,8 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth.context"
+import { withAuth } from "@/components/hoc/with_auth"
 
-export default function AccountPage() {
+function AccountPage() {
     const router = useRouter()
     const { customer, logout, isLoading } = useAuth()
     const [isEditing, setIsEditing] = useState(false)
@@ -24,11 +25,11 @@ export default function AccountPage() {
         phone: "",
     })
 
-    useEffect(() => {
-        if (!isLoading && !customer) {
-        router.push("/login")
-        }
-    }, [customer, isLoading, router])
+    // useEffect(() => {
+    //     if (!isLoading && !customer) {
+    //     router.push("/login")
+    //     }
+    // }, [customer, isLoading, router])
 
     useEffect(() => {
         if (customer) {
@@ -41,13 +42,13 @@ export default function AccountPage() {
         }
     }, [customer])
 
-    if (isLoading) {
-        return <div>Cargando...</div>
-    }
+    // if (isLoading) {
+    //     return <div>Cargando...</div>
+    // }
 
-    if (!customer) {
-        return <div>Redirigiendo...</div>
-      }
+    // if (!customer) {
+    //     return <div>Redirigiendo...</div>
+    //   }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -64,11 +65,11 @@ export default function AccountPage() {
 
     const handleLogout = async () => {
         try {
-        await logout()
-        router.push("/")
+            await logout()
+            router.push("/")
         } catch (error) {
-        console.error("Error al cerrar sesión:", error)
-        toast.error("Error al cerrar sesión. Por favor, inténtalo de nuevo.")
+            console.error("Error al cerrar sesión:", error)
+            toast.error("Error al cerrar sesión. Por favor, inténtalo de nuevo.")
         }
     }
 
@@ -147,7 +148,7 @@ export default function AccountPage() {
                 </CardHeader>
                 <CardContent>
                 <div className="space-y-4">
-                    {customer.addresses.map((address) => (
+                    {customer?.addresses?.map((address) => (
                     <div key={address.id} className="border p-4 rounded-md">
                         <p>{address.address1}</p>
                         <p>
@@ -194,3 +195,4 @@ export default function AccountPage() {
     )
 }
 
+export default withAuth(AccountPage)

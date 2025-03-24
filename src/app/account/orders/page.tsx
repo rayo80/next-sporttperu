@@ -13,12 +13,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { Order } from "@/types/order"
 import { useAuth } from "@/contexts/auth.context"
 import { useOrder } from "@/contexts/order.context"
+import { withAuth } from "@/components/hoc/with_auth"
 
-export default function OrdersPage() {
-    const router = useRouter()
+function OrdersPage() {
+    // const router = useRouter()
     const { customer, isLoading: isAuthLoading } = useAuth()
 
-    const [isLoadingOrders, setIsLoadingOrders] = useState(true)
+    const [ isLoadingOrders, setIsLoadingOrders ] = useState(true)
     const { orders, isLoading: isOrdersLoading, fetchOrders } = useOrder()
 
     useEffect(() => {
@@ -28,19 +29,19 @@ export default function OrdersPage() {
     }, [customer, fetchOrders])
 
 
-    useEffect(() => {
-          if (!isAuthLoading && !customer) {
-          router.push("/login")
-          }
-      }, [customer, isAuthLoading, router])
+    // useEffect(() => {
+    //       if (!isAuthLoading && !customer) {
+    //       router.push("/login")
+    //       }
+    //   }, [customer, isAuthLoading, router])
 
-    if (isAuthLoading || isOrdersLoading) {
-        return <div>Cargando...</div>
-    }
+    // if (isAuthLoading || isOrdersLoading) {
+    //     return <div>Cargando...</div>
+    // }
 
-    if (!customer) {
-        return <div>Redirigiendo...</div>
-    }
+    // if (!customer) {
+    //     return <div>Redirigiendo...</div>
+    // }
 
   return (
     <>
@@ -90,3 +91,4 @@ export default function OrdersPage() {
   )
 }
 
+export default withAuth(OrdersPage)
