@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import type { Product, VariantPrice } from "@/types/product"
 import { toast } from "sonner"
 import { useCart } from "@/contexts/cart.context"
@@ -18,61 +19,80 @@ export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
   const { title, slug, imageUrls, variants } = product
   const defaultVariant = variants[0]
   const { selectedCurrency } = useShop()
-  const priceObject = defaultVariant?.prices.find((p: VariantPrice) => p.currency.code === selectedCurrency?.code)
+  const priceObject = defaultVariant?.prices.find(
+    (p: VariantPrice) => p.currency.code === selectedCurrency?.code
+  )
   const price = Number.parseFloat(priceObject?.price || "0")
   const inventoryQuantity = variants[0]?.inventoryQuantity || 0
 
   const handleAddToCart = () => {
-    if (defaultVariant){
+    if (defaultVariant) {
       addItem(product, defaultVariant)
-      toast.success("Producto añadido al carrito")
-      console.log("Añadir al carrito")
+      toast.success("Producto añadido al carrito", {
+        duration: 2000,
+      })
     }
   }
 
-  // const generate_url = (url: string) => {
-  //   return `${process.env.BASE_IMAGE_URL}/uploads/${url}`;
-  // }
-
   const generate_url = (url: string) => {
-    return url;
+    return url
   }
 
   const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
     ? generate_url(imageUrls[0])
-    : "/assets/image.png";
+    : "/assets/image.png"
 
   return (
-    <Link href={`/product/${slug}`} className="block group">
-      <div className="flex flex-col md:flex-row items-start 
-      gap-6 p-4 bg-white rounded-lg border transition-shadow hover:shadow-lg relative">
-        <div className="relative w-full md:w-48 aspect-square md:aspect-[4/3] flex-shrink-0">
-          <Image
-            src={validUrl}
-            alt={title}
-            fill
-            className="object-contain transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
-        <div className="flex-grow space-y-2">
-          <h3 className="text-lg font-medium mb-2">{title}</h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-pink-500">{selectedCurrency?.symbol} {price.toFixed(2)}</span>
-          </div>
-          {inventoryQuantity > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-gray-300" />
-              <p className="text-sm text-muted-foreground">{inventoryQuantity} en stock</p>
+    <Card className="group h-52 overflow-hidden border border-gray-100 bg-gradient-to-b from-white to-gray-50 shadow-sm transition-all hover:shadow-md">
+      <div className="flex h-full flex-row">
+        <div className="relative h-full w-40">
+          <Link href={`/productos/${slug}`}>
+            <div className="relative h-full w-full overflow-hidden">
+              <Image
+                src={validUrl}
+                alt={title}
+                fill
+                className="object-contain  rounded-md p-2 transition-transform group-hover:scale-102"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
             </div>
-          )}
+          </Link>
         </div>
-        <Button size="icon" 
-          className="absolute top-4 right-4 bg-pink-500 hover:bg-pink-600" 
-          onClick={handleAddToCart}>
-          <ShoppingCart className="h-4 w-4" />
-          <span className="sr-only">Añadir al carrito</span>
-        </Button>
+        
+        <div className="flex flex-1 flex-col justify-between p-4">
+          <CardContent className="p-0">
+            <Link href={`/productos/${slug}`} className="no-underline">
+              <h3 className="mb-2 text-sm font-medium text-gray-800 transition-colors hover:text-gray-600">{title}</h3>
+            </Link>
+            
+            <div className="mt-1 flex items-baseline">
+              <span className="text-sm font-medium text-pink-500">
+                {selectedCurrency?.symbol} {price.toFixed(2)}
+              </span>
+            </div>
+            
+            {inventoryQuantity > 0 && (
+              <div className="mt-2">
+                <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-normal text-gray-500">
+                  {inventoryQuantity} en stock
+                </span>
+              </div>
+            )}
+          </CardContent>
+          
+          <CardFooter className="p-0 pt-3">
+            <Button 
+              onClick={handleAddToCart}
+              disabled={inventoryQuantity <= 0}
+              variant="outline"
+              className="group flex w-full items-center justify-center gap-2 border border-gray-200 bg-gradient-to-r from-white to-gray-100 text-xs text-gray-700 shadow-sm transition-all hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-200"
+            >
+              <ShoppingCart className="h-3 w-3" />
+              Añadir al carrito
+            </Button>
+          </CardFooter>
+        </div>
       </div>
-    </Link>
+    </Card>
   )
 }

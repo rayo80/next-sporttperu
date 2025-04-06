@@ -21,7 +21,12 @@ import { useProducts } from "@/contexts/product.context"
 import { SiteFooter } from "@/components/site-footer"
 import { useCategories } from "@/contexts/categories.context"
 import { useCollections } from "@/contexts/collections.context"
-import { parsePagesSegmentConfig } from "next/dist/build/segment-config/pages/pages-segment-config"
+
+// Define the FilterOption type to match what's expected in FilterAccordion
+interface FilterOption {
+  id: string
+  label: string
+}
 
 const sortOptions = [
   { label: "Destacados", value: "featured" },
@@ -35,7 +40,7 @@ const sortOptions = [
 export default function ShopPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { availableProducts: products, isLoading, error, getProducts } = useProducts()
+  const { availableProducts: products, isLoading, error } = useProducts()
   const { items: categories } = useCategories()
   const { items: collections } = useCollections()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -48,41 +53,64 @@ export default function ShopPage() {
   })
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "featured")
 
-  const filterOptions = useMemo(
-    () => ({
+  // Type-safe filter options generation
+  const filterOptions = useMemo(() => {
+    // Function to collect unique attribute values with proper type safety
+    const collectAttributeValues = (attributeName: string): FilterOption[] => {
+      const allValues = new Set<string>()
+      
+      products.forEach(product => {
+        product.variants.forEach(variant => {
+          if (variant.attributes && variant.attributes[attributeName] !== undefined) {
+            // Ensure we're only adding string values
+            const value = String(variant.attributes[attributeName])
+            if (value) {
+              allValues.add(value)
+            }
+          }
+        })
+      })
+      
+      return Array.from(allValues).map(value => ({
+        id: value,
+        label: value,
+      }))
+    }
+
+    // Collect size values, accounting for both "Size" and "Talla" attributes
+    const sizeOptions: FilterOption[] = [
+      ...collectAttributeValues("Size"),
+      ...collectAttributeValues("Talla")
+    ].filter((value, index, self) => 
+      // Remove duplicates that might exist between "Size" and "Talla"
+      index === self.findIndex(t => t.id === value.id)
+    )
+
+    return {
       category: categories.map((cat) => ({ 
         id: cat.slug, 
-        label: cat.name })),
-      color: Array.from(
-        new Set(
-            products.flatMap((p) => 
-                p.variants.map((v) => v.attributes.Color).filter((color) => color !== undefined)))
-        ).map((color) => ({
-            id: color,
-            label: color,
-        })),
-      size: Array.from(
-        new Set(
-            products.flatMap((p) => 
-                p.variants.map((v) => v.attributes.Talla).filter((size) => size !== undefined)))
-        ).map((size) => ({
-            id: size,
-            label: size,
-        })),
+        label: cat.name 
+      })) as FilterOption[],
+      color: collectAttributeValues("Color"),
+      size: sizeOptions,
       collection: collections.map((collection) => ({
         id: collection.slug,
         label: collection.title,
-      })),
-    }),
-    [categories, products],
-  )
+      })) as FilterOption[],
+    }
+  }, [categories, collections, products])
 
   const filteredProducts = useMemo(() => {
     return products.filter(
       (product) =>
         (filters.category.length === 0 || product.categories.some((cat) => filters.category.includes(cat.slug))) &&
-        (filters.color.length === 0 || product.variants.some((v) => filters.color.includes(v.attributes.Color))) &&
-        (filters.size.length === 0 || product.variants.some((v) => filters.size.includes(v.attributes.Size))) &&
+        (filters.color.length === 0 || product.variants.some((v) => 
+          v.attributes && filters.color.includes(String(v.attributes.Color)))) &&
+        (filters.size.length === 0 || product.variants.some((v) => 
+          v.attributes && (
+            filters.size.includes(String(v.attributes.Size)) || 
+            filters.size.includes(String(v.attributes.Talla))
+          ))) &&
         (filters.collection.length === 0 || product.collections.some((col) => filters.collection.includes(col.slug))),
     )
   }, [products, filters])
@@ -135,11 +163,9 @@ export default function ShopPage() {
   const updateURL = (newFilters: typeof filters, newSortBy: string) => {
     const params = new URLSearchParams()
     Object.entries(newFilters).forEach(([key, value]) => {
-        console.log("ne filters", Object.entries(newFilters))
         if (value.length > 0) {
             params.set(key, value.join(","))
         }
-        console.log("params", params.toString())
     })
     if (newSortBy !== "featured") {
       params.set("sort", newSortBy)
@@ -179,7 +205,7 @@ export default function ShopPage() {
           {/* Filters */}
           <div className="space-y-6">
             {(
-              Object.entries(filterOptions) as [keyof typeof filters, (typeof filterOptions)[keyof typeof filters]][]
+              Object.entries(filterOptions) as [keyof typeof filters, FilterOption[]][]
             ).map(([key, options]) => (
                 <FilterAccordion
                     key={key}
@@ -287,4 +313,3 @@ export default function ShopPage() {
     </>
   )
 }
-
