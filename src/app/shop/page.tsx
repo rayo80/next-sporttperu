@@ -252,14 +252,14 @@ export default function ShopPage() {
                   >
                     <Grid className="h-4 w-4" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setViewMode("list")}
                     className={viewMode === "list" ? "text-pink-500" : ""}
                   >
                     <List className="h-4 w-4" />
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import type { Address, CreateCustomerDto } from "@/types/customer"
 import { Currency } from "./product"
-import { OrderFinancialStatus } from "./commom"
+import { OrderFinancialStatus, OrderFulfillmentStatus } from "./commom"
 
 export interface OrderItemData {
     variantId: string
@@ -28,6 +28,7 @@ export interface CheckoutFormData {
         shippingMethodId?: string | null
         deliveryMethod: "shipping" | "pickup"
         paymentStatus?: OrderFinancialStatus
+        // fulfillmentStatus?: OrderFulfillmentStatus
     }
 
     // Payment information

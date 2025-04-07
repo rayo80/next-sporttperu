@@ -1,4 +1,4 @@
-import { OrderFinancialStatus } from "./commom"
+import { OrderFinancialStatus, OrderFulfillmentStatus } from "./commom"
 
 export interface OrderCustomer {
   id: string
@@ -145,6 +145,7 @@ export interface Order {
     shippingAddressId?: string | null
     billingAddressId?: string | null
     paymentProviderId?: string | null
+    fulfillmentStatus?: OrderFulfillmentStatus
     shippingMethodId?: string | null
     customerNotes?: string
     preferredDeliveryDate?: string

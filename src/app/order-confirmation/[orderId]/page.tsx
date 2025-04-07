@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import type { Order } from "@/types/order"
 import { use } from "react"
 import { useOrder } from "@/contexts/order.context"
+import { useAuth } from "@/contexts/auth.context"
 
 const generateUrl = (url: string) => {
     return url;
@@ -23,6 +24,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
   const [order, setOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { customer, isLoading: isAuthLoading } = useAuth()
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -186,10 +188,16 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ or
                 Continua Comprando
               </Link>
             </Button>
-            <Button asChild>
+
+
+            {customer && (            
+              <Button asChild>
               {/* <Link href="/account/orders">View All Orders</Link> */}
-              <Link href="/account/orders">Ver todas mis ordenes</Link>
-            </Button>
+                <Link href="/account/orders">Ver todas mis ordenes</Link>
+              </Button>
+            )}
+
+
           </CardFooter>
         </Card>
       </div>

@@ -9,6 +9,7 @@ import { useCart } from "./cart.context"
 import { useAuth } from "./auth.context"
 import { orderService } from "@/services/order"
 import { CheckoutFormData } from "@/types/checkout"
+import { OrderFinancialStatus, OrderFulfillmentStatus } from "@/types/commom"
 
 
 interface OrderContextType {
@@ -74,6 +75,8 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           paymentProviderId: checkoutData.orderDetails.paymentProviderId,
           shippingMethodId: checkoutData.orderDetails.shippingMethodId,
           customerNotes: checkoutData.orderDetails.customerNotes,
+          paymentStatus: checkoutData.orderDetails.paymentStatus,
+          fulfillmentStatus: OrderFulfillmentStatus.PENDING_FULFILLMENT, // FIXED VALUE
           preferredDeliveryDate: checkoutData.orderDetails.preferredDeliveryDate,
           source: "web",
         }
