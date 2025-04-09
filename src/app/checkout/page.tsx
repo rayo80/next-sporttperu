@@ -30,6 +30,8 @@ import { CheckoutFormData } from "@/types/checkout"
 import { OrderFinancialStatus } from "@/types/commom"
 import { mercadopagoService } from "@/services/mercado-pago"
 import { SiteFooter } from "@/components/site-footer"
+import { useEmail } from "@/contexts/email.context"
+import { EmailFormData, EmailResponse, EmailSendParams } from "@/types/email"
 
 interface FormErrors {
   email?: string
@@ -54,6 +56,7 @@ export default function CheckoutPage() {
   const { customer, isLoading: isAuthLoading } = useAuth()
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const{sendEmail,submitForm} =useEmail()
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
@@ -305,93 +308,309 @@ export default function CheckoutPage() {
   }
 
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    if (!validateForm()) {
-      setIsSubmitting(false)
-      toast.error("Por favor, complete todos los campos requeridos")
-      return
-    }
+// Import useEmail at component level, not inside the function
+// const { sendEmail, submitForm } = useEmail(); - Move this outside handleSubmit
 
-    try {
-      const currencyId = formData.payment.currencyId
-      const completeFormData: CheckoutFormData = {
-        ...formData,
-        customer: {
-          ...formData.customer,
-          id: customer ? customer.id : formData.customer.id, // Si hay `customer`, usa su `id`, sino mantiene el del formulario.
-          addresses: customer ? customer.addresses.map((addr) => ({ ...addr })) : formData.customer.addresses, // Si hay `customer`, usa sus direcciones, sino mantiene las del formulario.
-        },
-        cartItems: cartItems.map((item) => ({
-          variantId: item.variant.id,
-          title: item.product.title,
-          quantity: item.quantity,
-          price: Number(item.variant.prices.find((p) => p.currencyId === currencyId)?.price || 0),
-        })),
-        orderDetails: {
-          ...formData.orderDetails,
-          paymentStatus: OrderFinancialStatus.PENDING,
-        }
-      }
-
-      if (paymentMethod?.type === PaymentProviderType.MERCADO_PAGO) {
-
-        // Create MercadoPago preference
-        try {
-          const mercadoPagoItems = completeFormData.cartItems!.map((item) => ({
-            id: item.variantId,
-            title: item.title,
-            description: item.title,
-            unit_price: item.price,
-            quantity: item.quantity,
-            currency_id: selectedCurrency?.code,
-          }))
-          
-          // const checkoutMPFormData: CheckoutFormData = {
-          //   ...completeFormData,
-          //   orderDetails: {
-          //     ...completeFormData.orderDetails,
-          //     paymentStatus: OrderFinancialStatus.PENDING, // Agregar estado pendiente
-          //   },
-          // }
-
-          const order = await createOrderFromCart(
-            completeFormData
-          )
-          console.log("completeFormData", completeFormData)
-          const init_point = await mercadopagoService.createPreference(
-            mercadoPagoItems,
-            completeFormData,
-            order.id
-          )
-          
-          // Redirect to MercadoPago payment page
-          window.location.href = init_point
-        } catch (error) {
-          console.error("Error creating MercadoPago preference:", error)
-          toast.error("Error al crear la preferencia de pago. Por favor, inténtelo de nuevo.")
-        }
-      } else {
-        // Proceed with  other payment methods (create order directly)
-          const order = await createOrderFromCart(completeFormData)
-        
-          toast.success("¡Orden creada con éxito!")
-          clearCart()
-          router.push(`/order-confirmation/${order.id}`)
-      }
-      // const order = await createOrderFromCart({ items, total }, formData)
-
-      // toast.success("¡Orden creada con éxito!")
-      // clearCart()
-      // router.push(`/order-confirmation/${order.id}`)
-    } catch (error) {
-      console.log("Error creating order:", error)
-      toast.error(error instanceof Error ? error.message : "Error al crear la orden. Por favor, inténtelo de nuevo.")
-    } finally {
-      setIsSubmitting(false)
-    }
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault()
+  setIsSubmitting(true)
+  if (!validateForm()) {
+    setIsSubmitting(false)
+    toast.error("Por favor, complete todos los campos requeridos")
+    return
   }
+
+  try {
+    const currencyId = formData.payment.currencyId
+    const completeFormData: CheckoutFormData = {
+      ...formData,
+      customer: {
+        ...formData.customer,
+        id: customer ? customer.id : formData.customer.id, // Si hay `customer`, usa su `id`, sino mantiene el del formulario.
+        addresses: customer ? customer.addresses.map((addr) => ({ ...addr })) : formData.customer.addresses, // Si hay `customer`, usa sus direcciones, sino mantiene las del formulario.
+      },
+      cartItems: cartItems.map((item) => ({
+        variantId: item.variant.id,
+        title: item.product.title,
+        quantity: item.quantity,
+        price: Number(item.variant.prices.find((p) => p.currencyId === currencyId)?.price || 0),
+      })),
+      orderDetails: {
+        ...formData.orderDetails,
+        paymentStatus: OrderFinancialStatus.PENDING,
+      }
+    }
+
+    // Get email context
+
+    if (paymentMethod?.type === PaymentProviderType.MERCADO_PAGO) {
+      // Create MercadoPago preference
+      try {
+        const mercadoPagoItems = completeFormData.cartItems!.map((item) => ({
+          id: item.variantId,
+          title: item.title,
+          description: item.title,
+          unit_price: item.price,
+          quantity: item.quantity,
+          currency_id: selectedCurrency?.code,
+        }))
+
+        const order = await createOrderFromCart(
+          completeFormData
+        )
+        console.log("completeFormData", completeFormData)
+        
+        // Send confirmation email only if customer is registered
+        if (customer) {
+          await sendCustomerConfirmationEmail(completeFormData, order, sendEmail);
+        }
+        
+        // Always send notification email to store owner
+        await sendOwnerNotificationEmail(completeFormData, order, submitForm);
+        
+        const init_point = await mercadopagoService.createPreference(
+          mercadoPagoItems,
+          completeFormData,
+          order.id
+        )
+        
+        // Redirect to MercadoPago payment page
+        window.location.href = init_point
+      } catch (error) {
+        console.error("Error creating MercadoPago preference:", error)
+        toast.error("Error al crear la preferencia de pago. Por favor, inténtelo de nuevo.")
+      }
+    } else {
+      // Proceed with other payment methods (create order directly)
+        const order = await createOrderFromCart(completeFormData)
+        
+        // Send confirmation email only if customer is registered
+        if (customer) {
+          await sendCustomerConfirmationEmail(completeFormData, order, sendEmail);
+        }
+        
+        // Always send notification email to store owner
+        await sendOwnerNotificationEmail(completeFormData, order, submitForm);
+      
+        toast.success("¡Orden creada con éxito!")
+        clearCart()
+        router.push(`/order-confirmation/${order.id}`)
+    }
+  } catch (error) {
+    console.log("Error creating order:", error)
+    toast.error(error instanceof Error ? error.message : "Error al crear la orden. Por favor, inténtelo de nuevo.")
+  } finally {
+    setIsSubmitting(false)
+  }
+}
+
+// Function to send order confirmation email to the customer (only for registered users)
+const sendCustomerConfirmationEmail = async (
+  formData: CheckoutFormData, 
+  order: any, 
+  sendEmail: (params: EmailSendParams) => Promise<EmailResponse>
+  ) => {
+  try {
+    const customerEmail = formData.customer.email;
+    
+    // Calculate total price
+    const totalPrice = formData.cartItems!.reduce(
+      (sum, item) => sum + (item.price * item.quantity), 
+      0
+    ).toFixed(2);
+  
+    // Create WhatsApp message with order details
+    const whatsappMessage = encodeURIComponent(`Hola Sportt Peru. Tengo una consulta sobre mi pedido #${order.id} realizado el ${new Date().toLocaleDateString('es-ES')}. ¿Podrían ayudarme?`);
+    const whatsappLink = `https://wa.me/51959051109?text=${whatsappMessage}`;
+  
+    // Generate items HTML
+    const itemsHTML = formData.cartItems!.map(item => `
+      <tr>
+        <td style="padding: 16px; border-bottom: 1px solid #eaeaea; color: #424242;">${item.title}</td>
+        <td style="padding: 16px; border-bottom: 1px solid #eaeaea; text-align: center; color: #424242;">${item.quantity}</td>
+        <td style="padding: 16px; border-bottom: 1px solid #eaeaea; text-align: right; color: #424242;">${selectedCurrency?.symbol}${item.price.toFixed(2)}</td>
+        <td style="padding: 16px; border-bottom: 1px solid #eaeaea; text-align: right; font-weight: 500; color: #424242;">${selectedCurrency?.symbol}${(item.price * item.quantity).toFixed(2)}</td>
+      </tr>
+    `).join('');
+  
+    // Create email HTML with elegant gray design for Sportt Peru
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Confirmación de Pedido - Sportt Peru</title>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+      </head>
+      <body style="margin: 0; padding: 0; font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif; color: #4a4a4a; line-height: 1.6; background-color: #f5f5f5;">
+        <div style="max-width: 650px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+          <!-- Header with Logo -->
+          <div style="background: linear-gradient(135deg, #5a5a5a, #3a3a3a); padding: 35px 40px; text-align: center;">
+            <div style="margin-bottom: 15px;">
+              <!-- Logo actual -->
+              <img src="https://sporttperu.com/assets/logo.png" alt="Sportt Peru" style="max-height: 60px;">
+            </div>
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 500; letter-spacing: 0.5px;">Confirmación de Pedido</h1>
+            <p style="color: #f0f0f0; margin-top: 10px; font-size: 15px; font-weight: 300; opacity: 0.9;">Gracias por confiar en nosotros</p>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px; background-color: #ffffff;">
+            <!-- Greeting -->
+            <p style="font-size: 16px; color: #4a4a4a; margin-bottom: 25px;">
+              Hola <span style="font-weight: 500; color: #333333;">${formData.customer.firstName}</span>,
+            </p>
+            
+            <p style="font-size: 16px; color: #4a4a4a; margin-bottom: 30px; line-height: 1.6;">
+              Tu pedido ha sido procesado correctamente. A continuación encontrarás los detalles de tu compra:
+            </p>
+            
+            <!-- Order Info Box -->
+            <div style="background-color: #f9f9f9; border-left: 3px solid #e091a9; padding: 20px 25px; margin-bottom: 35px; border-radius: 5px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <h2 style="color: #3a3a3a; font-size: 18px; margin: 0 0 10px 0; font-weight: 500;">Pedido #${order.id}</h2>
+                  <p style="font-size: 14px; color: #6b6b6b; margin: 0;">
+                    Fecha: ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                </div>
+                <div>
+                  <a href="https://sporttperu.com/order-confirmation/${order.id}" style="display: inline-block; padding: 8px 15px; background-color: #f0f0f0; color: #4a4a4a; text-decoration: none; border-radius: 20px; font-size: 13px; font-weight: 500; transition: all 0.2s ease; border: 1px solid #e8e8e8;">
+                    Ver pedido
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Products -->
+            <h3 style="color: #3a3a3a; font-size: 18px; margin-bottom: 20px; font-weight: 500; position: relative; padding-bottom: 8px; display: inline-block;">
+              Detalle de tu pedido
+              <span style="position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, #e091a9, #e091a960);"></span>
+            </h3>
+            
+            <div style="background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 5px; overflow: hidden; margin-bottom: 35px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 14px 16px; text-align: left; color: #3a3a3a; font-weight: 500; font-size: 14px;">Producto</th>
+                    <th style="padding: 14px 16px; text-align: center; color: #3a3a3a; font-weight: 500; font-size: 14px;">Cantidad</th>
+                    <th style="padding: 14px 16px; text-align: right; color: #3a3a3a; font-weight: 500; font-size: 14px;">Precio</th>
+                    <th style="padding: 14px 16px; text-align: right; color: #3a3a3a; font-weight: 500; font-size: 14px;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHTML}
+                </tbody>
+                <tfoot>
+                  <tr style="background-color: #f9f9f9;">
+                    <td colspan="3" style="padding: 16px; text-align: right; color: #3a3a3a; font-weight: 500;">Total:</td>
+                    <td style="padding: 16px; text-align: right; font-size: 16px; color: #3a3a3a; font-weight: 600;">${selectedCurrency?.symbol}${totalPrice}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            <!-- Shipping Info -->
+            <h3 style="color: #3a3a3a; font-size: 18px; margin-bottom: 20px; font-weight: 500; position: relative; padding-bottom: 8px; display: inline-block;">
+              Información de entrega
+              <span style="position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, #e091a9, #e091a960);"></span>
+            </h3>
+            
+            <div style="background-color: #f9f9f9; padding: 25px; margin-bottom: 35px; border-radius: 5px; border: 1px solid #eaeaea;">
+              <p style="font-size: 15px; line-height: 1.7; margin: 0; color: #4a4a4a;">
+                <span style="font-weight: 500; color: #3a3a3a;">${formData.customer.firstName} ${formData.customer.lastName}</span><br>
+                ${formData.customer.addresses[0].address1}<br>
+                ${formData.customer.addresses[0].city}, ${formData.customer.addresses[0].province} ${formData.customer.addresses[0].zip}<br>
+                ${formData.customer.addresses[0].country}
+              </p>
+            </div>
+            
+            <p style="font-size: 16px; line-height: 1.6; margin-bottom: 35px; color: #4a4a4a;">
+              Te mantendremos informado sobre el estado de tu pedido. Si tienes alguna pregunta, no dudes en contactarnos.
+            </p>
+            
+            <!-- Buttons -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 40px 0; flex-wrap: wrap; gap: 15px;">
+              <!-- WhatsApp Button con ícono base64 para asegurar visualización -->
+              <a href="${whatsappLink}" style="flex: 1; min-width: 200px; background-color: #25D366; color: white; text-decoration: none; padding: 14px 20px; border-radius: 5px; font-weight: 500; display: inline-block; font-size: 15px; text-align: center; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.2); transition: all 0.3s ease;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white" style="vertical-align: middle; margin-right: 10px;">
+                  <path d="M12 2C6.5 2 2 6.5 2 12c0 1.4.3 2.7.8 3.9l-1 3.5c-.1.6.4 1.1 1 1l3.5-1c1.2.5 2.5.8 3.9.8 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.2 0-2.4-.3-3.5-.7l-.6-.3-2.5.7.7-2.5-.3-.6c-.5-1-.7-2.2-.7-3.5 0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8zm4.7-11.9c-.2-.1-1.3-.6-1.5-.7-.2-.1-.3-.1-.5.1-.1.2-.6.7-.7.8-.1.1-.2.1-.4 0s-.8-.3-1.6-.9c-.6-.5-1-1.2-1.1-1.4-.1-.2 0-.3.1-.4.1-.1.2-.2.3-.3.1-.1.1-.2.2-.3.1-.1.1-.2 0-.3-.1-.1-.5-1.2-.7-1.6-.2-.4-.3-.3-.5-.4h-.4c-.1 0-.3.1-.5.3-.2.2-.7.7-.7 1.8s.7 2.1.8 2.2c.1.1 1.4 2.1 3.3 2.9 1.9.8 1.9.5 2.2.5.3 0 1.1-.5 1.3-.9.2-.5.2-.8.1-.9z"/>
+                </svg>
+                Consultar por WhatsApp
+              </a>
+              
+              <!-- Visit Store Button -->
+              <a href="https://sporttperu.com" style="flex: 1; min-width: 200px; background-color: #f5f5f5; border: 1px solid #e0e0e0; color: #4a4a4a; text-decoration: none; padding: 14px 20px; border-radius: 5px; font-weight: 500; display: inline-block; font-size: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); transition: all 0.3s ease;">
+                Visitar tienda
+              </a>
+            </div>
+          </div>
+          
+ 
+          
+          <!-- Footer -->
+          <div style="background-color: #4a4a4a; padding: 25px; text-align: center; color: #f5f5f5;">
+            <p style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">&copy; ${new Date().getFullYear()} Sportt Peru. Todos los derechos reservados.</p>
+            <p style="margin: 0; font-size: 12px; opacity: 0.7;">Este correo fue enviado a ${formData.customer.email}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  
+    // Send the email
+    await sendEmail({
+      to: customerEmail!,
+      subject: `Sportt Peru: Confirmación de Pedido #${order.id}`,
+      html: emailHTML
+    });
+  
+    console.log("Confirmation email sent to customer");
+  } catch (error) {
+    console.error("Error sending confirmation email to customer:", error);
+  }
+  };
+
+// Function to send notification email to the store owner with flat JSON structure
+const sendOwnerNotificationEmail = async (
+formData: CheckoutFormData, 
+order: any, 
+submitForm: (formData: EmailFormData) => Promise<EmailResponse>
+) => {
+try {
+  // Calculate total price
+  const totalPrice = formData.cartItems!.reduce(
+    (sum, item) => sum + (item.price * item.quantity), 
+    0
+  ).toFixed(2);
+  
+  // Prepare flat order data for the store owner (JSON without hierarchy)
+  const orderData = {
+    orderId: order.id,
+    orderDate: new Date().toISOString(),
+    customerName: `${formData.customer.firstName} ${formData.customer.lastName}`,
+    customerEmail: formData.customer.email,
+    customerPhone: formData.customer.phone || "No proporcionado",
+    customerIsRegistered: customer ? true : false,
+    shippingAddress: `${formData.customer.addresses[0].address1}, ${formData.customer.addresses[0].city}, ${formData.customer.addresses[0].province}, ${formData.customer.addresses[0].zip}, ${formData.customer.addresses[0].country}`,
+    totalAmount: totalPrice,
+    currency: selectedCurrency?.code,
+    paymentMethod: paymentMethod?.name || "No especificado",
+    paymentStatus: formData.orderDetails.paymentStatus,
+    items: JSON.stringify(formData.cartItems!.map(item => `${item.title} x ${item.quantity} - ${selectedCurrency?.symbol}${(item.price * item.quantity).toFixed(2)}`)),
+    store: "Sportt Peru",
+    notificationSentDate: new Date().toISOString()
+  };
+  
+  // Submit the form with flat order data
+  await submitForm(orderData);
+  
+  console.log("Order notification sent to store owner");
+} catch (error) {
+  console.error("Error sending notification to store owner:", error);
+}
+};
 
   if (isAuthLoading) {
     return <div>Loading...</div>

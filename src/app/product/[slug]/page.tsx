@@ -307,7 +307,7 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                     >
                       <Image
                         src={generateUrl(img)}
-                        alt={`${product?.name} - Vista ${index + 1}`}
+                        alt={`${product?.name} - Vista ${index + 1}` || "/placeholder.svg"}
                         fill
                         className="object-contain p-1"
                       />
