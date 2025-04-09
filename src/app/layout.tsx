@@ -12,6 +12,7 @@ import { CurrencySelector } from "@/components/currency-selector";
 import { PaymentProviderProvider } from "@/contexts/payment-provider.context";
 import { CollectionProvider } from "@/contexts/collections.context";
 import { ShippingMethodProvider } from "@/contexts/shipping-method.context";
+import { EmailProvider } from "@/contexts/email.context";
 
 export default function RootLayout({
   children,
@@ -31,7 +32,9 @@ export default function RootLayout({
                       <AuthProvider>
                         <AddressProvider>
                           <OrderProvider>
+                            <EmailProvider>
                           {children}
+                          </EmailProvider>
                           <Toaster />
                           </OrderProvider>
                         </AddressProvider>
