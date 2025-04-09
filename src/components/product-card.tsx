@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { ButtonCard } from "./button-card"
 import { useCart } from "@/contexts/cart.context"
-import { Product, ProductVariant, ProductVariantModel, VariantPrice } from "@/types/product"
+import { Product, ProductModel, ProductVariant, ProductVariantModel, VariantPrice } from "@/types/product"
 import { toast } from "sonner"
 import { useShop } from "@/contexts/shop.context"
 
@@ -32,11 +32,10 @@ export function ProductCard({
   const { addItem } = useCart()
   const { selectedCurrency } = useShop()
   
-  const { title, slug, imageUrls, status, variants } = product
+  const productM = ProductModel.fromInterface(product)
+  const { title, slug, imageUrls, status, variants } = productM
   
-  const validUrl = imageUrls && imageUrls.length > 0 && imageUrls[0]
-    ? generate_url(imageUrls[0])
-    : "/assets/image.png";
+  const validUrl = productM.mainImage
   const defaultVariant = variants[0]
 
   
@@ -48,9 +47,13 @@ export function ProductCard({
   const discount = 0
 
   
-  const inventoryQuantity = variants[0]?.inventoryQuantity || 0
-  const isOutOfStock = inventoryQuantity === 0
+  // const inventoryQuantity = variants[0]?.inventoryQuantity || 0
+  // const isOutOfStock = inventoryQuantity === 0
   
+  const inventoryQuantity = productM.totalInventory
+  const isOutOfStock = inventoryQuantity === 0
+
+
   const handleAddToCart = () => {
     if (defaultVariant){
       console.log("Añadiendo", defaultVariant)
