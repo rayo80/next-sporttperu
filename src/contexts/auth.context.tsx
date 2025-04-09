@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (basicUser) {
           const completeUser = await authService.getCompleteCustomerData(basicUser.id)
           if (completeUser) {
+            console.log("Complete user data:", completeUser)
             setCustomer(completeUser)
           }
         }
@@ -57,7 +58,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { access_token, userInfo } = await authService.login(credentials)
       localStorage.setItem("token", access_token)
-      setCustomer(userInfo)
+      // Obtener datos completos del usuario después de login
+      const completeUser = await authService.getCompleteCustomerData(userInfo.id)
+      if (completeUser) {
+        console.log("Complete user data (from login):", completeUser)
+        setCustomer(completeUser)
+      } else {
+        // Fallback por si no hay datos completos
+        console.warn("User data is incomplete, setting basic user info")
+        setCustomer(userInfo)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during login")
       throw err
