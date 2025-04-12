@@ -10,20 +10,18 @@ const mercadopago = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TO
 export async function POST(request: Request) {
   try {
     const { items, checkoutFormData: formData, orderId } = await request.json()
-    console.log('items', items,)
-    console.log('formData', formData)
-    console.log('adresses', orderId)
     // Create the MercadoPago preference
+    console.log('form data', formData)
     const preference = await new Preference(mercadopago).create({
       body: {
         items,
         payer: {
-          name: formData.firstName,
-          surname: formData.lastName,
-          email: formData.email,
+          name: formData.customer.firstName,
+          surname: formData.customer.lastName,
+          email: formData.customer.email || formData.customer.extrainfo?.email,
           phone: {
             area_code: "",
-            number: formData.phone,
+            number: formData.customer.phone,
           },
           address: {
             street_name: formData.customer.addresses[0].address1,
@@ -40,7 +38,7 @@ export async function POST(request: Request) {
         external_reference: orderId,
       },
     })
-
+    console.log('preference', preference)
     return NextResponse.json({ init_point: preference.init_point })
   } catch (error) {
     console.error("Error creating MercadoPago preference:", error)

@@ -77,8 +77,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
 
     case "CLEAR_CART":
-      newState = initialState
-      break
+      return initialState
+
 
     // case "UPDATE_TOTAL":
     //   return {
