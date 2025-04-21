@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Grid, List, ChevronLeft, ChevronRight } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
@@ -52,6 +52,46 @@ export default function ShopPage() {
     collection: searchParams.get("collection")?.split(",") || [],
   })
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "featured")
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    console.log("URL Params:", params.toString())
+    // Actualizar el estado de los filtros cuando los parámetros de URL cambien
+    const categoryParam = params.get("category")?.split(",") || []
+    const colorParam = params.get("color")?.split(",") || []
+    const sizeParam = params.get("size")?.split(",") || []
+    const collectionParam = params.get("collection")?.split(",") || []
+    const sortParam = params.get("sort") || "featured"
+
+    // Solo actualizar si hay cambios para evitar bucles infinitos
+    const hasFilterChanges =
+      !arraysEqual(categoryParam, filters.category) ||
+      !arraysEqual(colorParam, filters.color) ||
+      !arraysEqual(sizeParam, filters.size) ||
+      !arraysEqual(collectionParam, filters.collection)
+
+    const hasSortChanges = sortParam !== sortBy
+
+    if (hasFilterChanges) {
+      setFilters({
+        category: categoryParam,
+        color: colorParam,
+        size: sizeParam,
+        collection: collectionParam,
+      })
+    }
+
+    if (hasSortChanges) {
+      setSortBy(sortParam)
+    }
+
+    // Función auxiliar para comparar arrays
+    function arraysEqual(a: string[], b: string[]) {
+      if (a.length !== b.length) return false
+      return a.every((val, index) => val === b[index])
+    }
+  }, [searchParams]) // Dependencia en searchParams para que se ejecute cuando cambie la URL
+
 
   // Type-safe filter options generation
   const filterOptions = useMemo(() => {
