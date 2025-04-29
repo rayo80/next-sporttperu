@@ -47,7 +47,8 @@ interface VariantAttributeGroup {
 // }
 
 const generateUrl = (url: string) => {
-  return url;
+    // Si es una URL de placeholder, la dejamos como está
+    return url
 }
 
 const colorOptions: ColorOption[] = [
@@ -244,271 +245,273 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
           </Breadcrumb>
           </div>
         </div>
-        <div className="container-section py-16">
-        <div className="content-section grid lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Images */}
-          <div className="space-y-4">
-            <div className="aspect-square relative border rounded-lg overflow-hidden">
-              <Image
-                src={generateUrl(productImages[selectedImageIndex])}
-                alt="Tenergy 05 FX"
-                fill
-                className="object-contain"
-              />
-              {/* Main Image Navigation */}
-                <div className="absolute inset-0 flex items-center justify-between p-4">
-                  <Button variant="outline" size="icon" onClick={prevImage} 
-                    className="bg-white/80 hover:bg-white">
+        <div className="md:container-section md:py-16">
+          <div className="md:container-section w-full flex flex-col lg:flex-row  gap-8 lg:gap-12 md:px-4">
+            {/* Product Images */}
+            <div className="flex-1 w-full space-y-3 relative">
+              <div className="w-full lg:max-w-[500px] aspect-[3/4] relative border rounded-lg overflow-hidden mx-auto">
+                <Image
+                  src={generateUrl(productImages[selectedImageIndex])}
+                  alt="Tenergy 05 FX"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 800px) 50vw, 33vw"
+                  fill
+                  className="object-contain md:w-full w-100px"
+                />
+                {/* Main Image Navigation */}
+                  <div className="absolute inset-0 flex items-center justify-between p-4">
+                    <Button variant="outline" size="icon" onClick={prevImage} 
+                      className="bg-white/80 hover:bg-white">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={nextImage} 
+                      className="bg-white/80 hover:bg-white">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+              </div>
+              {productImages.length > 0 && (
+                <div className="relative overflow-hidden lg:max-w-[500px] mx-auto">
+                  {/* Thumbnail Navigation */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => scrollThumbnails("left")}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white"
+                  >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={nextImage} 
-                    className="bg-white/80 hover:bg-white">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => scrollThumbnails("right")}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white"
+                  >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                </div>
-            </div>
-            {productImages.length > 0 && (
-              <div className="relative">
-                {/* Thumbnail Navigation */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => scrollThumbnails("left")}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => scrollThumbnails("right")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                {/* Thumbnails Slider */}
-                <div
-                  ref={thumbnailsRef}
-                  className="flex gap-2 overflow-x-auto scrollbar-hide mx-10"
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseLeave}
-                  style={{ scrollBehavior: isDragging ? "auto" : "smooth" }}
-                >
-                  {productImages.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={cn(
-                        "relative flex-shrink-0 w-20 aspect-square border rounded-md overflow-hidden bg-white",
-                        selectedImageIndex === index && "ring-2 ring-pink-500",
-                      )}
-                    >
-                      <Image
-                        src={generateUrl(img)}
-                        alt={`${product?.name} - Vista ${index + 1}` || "/placeholder.svg"}
-                        fill
-                        className="object-contain p-1"
-                      />
-                    </button>
-                  ))}
-                </div>
-                {/* Pagination Dots */}
-                <div className="flex justify-center gap-1 mt-4">
-                  {productImages.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={cn(
-                        "w-2 h-2 rounded-full transition-colors",
-                        selectedImageIndex === index ? "bg-pink-500" : "bg-gray-300",
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">{product?.title}</h1>
-              <div className="mt-4 flex gap-4">
-                <span className="text-3xl font-bold text-pink-500">{selectedCurrency?.symbol} {variantPrice.toFixed(2)}</span>
-                <CurrencySelector/>
-              </div>
-            </div>
-
-            {selectedVariant && (
-              <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    "h-2 w-2 rounded-full",
-                    selectedVariant.inventoryQuantity > 0 ? "bg-green-500" : "bg-red-500",
-                  )}
-                />
-                <p className="text-sm text-muted-foreground">
-                  {selectedVariant.inventoryQuantity > 0 ? `${selectedVariant.inventoryQuantity} en stock` : "Agotado"}
-                </p>
-              </div>
-            )}
-
-              <div className="text-muted-foreground text-sm leading-relaxed">
-                {product?.description ? (
+                  {/* Thumbnails Slider */}
                   <div
-                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
-                  />
-                ) : (
-                  "Descripción del producto no disponible."
-                )}
-              </div>
-
-            <ul>
-              <li className="flex items-center border">
-                <span className="font-semibold  text-center text-xs w-1/4 border py-2">Distribuidor:</span>
-                <span className="text-sm w-3/4 text-center">
-                  <a href="/" title="Distribuidor" className="hover:underline">{product?.vendor}</a>
-                </span>
-              </li>
-            </ul>
-            {/* Variant Selectors */}
-            <div className="space-y-5">
-              {Object.entries(attributeGroups).map(([type, group]) => (
-                <div key={type} className="space-y-2">
-                  <Label className="text-base">{type}:</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {group.values.map((value) => {
-                      const isSelected = selectedAttributes[type] === value
-                      const isAvailable = group.available[value]
-
-                      return (
-                        <Button
-                          key={value}
-                          variant="outline"
-                          size="sm"
-                          className={cn(
-                            "h-9 px-4",
-                            isSelected && "border-pink-500 bg-pink-50 text-pink-500",
-                            !isAvailable && "opacity-50 cursor-not-allowed line-through",
-                          )}
-                          onClick={() => isAvailable && handleAttributeSelect(type, value)}
-                          disabled={!isAvailable}
-                        >
-                          {value}
-                        </Button>
-                      )
-                    })}
+                    ref={thumbnailsRef}
+                    className="flex gap-2 overflow-x-auto scrollbar-hide px-4 max-w-full"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseLeave}
+                    style={{ scrollBehavior: isDragging ? "auto" : "smooth" }}
+                  >
+                    {productImages.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={cn(
+                          "relative flex-shrink-0 w-20 aspect-square border rounded-md overflow-hidden bg-white",
+                          selectedImageIndex === index && "ring-2 ring-pink-500",
+                        )}
+                      >
+                        <Image
+                          src={generateUrl(img)}
+                          alt={`${product?.name} - Vista ${index + 1}` || "/placeholder.svg"}
+                          fill
+                          className="object-contain p-1"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {/* Pagination Dots */}
+                  <div className="flex justify-center gap-1 mt-4">
+                    {productImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={cn(
+                          "w-2 h-2 rounded-full transition-colors",
+                          selectedImageIndex === index ? "bg-pink-500" : "bg-gray-300",
+                        )}
+                      />
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-            <div className="space-y-4">
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center border rounded-md">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-none"
-                    onClick={decrementQuantity}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <div className="w-12 text-center">{quantity}</div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-none"
-                    onClick={incrementQuantity}
-                    disabled={!selectedVariant || quantity >= selectedVariant.inventoryQuantity}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+            {/* Product Info */}
+            <div className="flex-1 w-full space-y-6 px-5 md:px-16">
+              <div>
+                <h1 className="text-3xl font-bold">{product?.title}</h1>
+                <div className="mt-4 flex gap-4">
+                  <span className="text-3xl font-bold text-pink-500">{selectedCurrency?.symbol} {variantPrice.toFixed(2)}</span>
+                  <CurrencySelector/>
+                </div>
+              </div>
+
+              {selectedVariant && (
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      selectedVariant.inventoryQuantity > 0 ? "bg-green-500" : "bg-red-500",
+                    )}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {selectedVariant.inventoryQuantity > 0 ? `${selectedVariant.inventoryQuantity} en stock` : "Agotado"}
+                  </p>
+                </div>
+              )}
+
+                <div className="text-muted-foreground text-sm leading-relaxed">
+                  {product?.description ? (
+                    <div
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
+                    />
+                  ) : (
+                    "Descripción del producto no disponible."
+                  )}
                 </div>
 
-                <Button
-                  className="flex-1 bg-zinc-900 hover:bg-zinc-800"
-                  onClick={handleAddToCart}
-                  disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
-                >
-                  Añadir al Carrito
-                </Button>
-                <Button
+              <ul>
+                <li className="flex items-center border">
+                  <span className="font-semibold  text-center text-xs w-1/4 border py-2">Distribuidor:</span>
+                  <span className="text-sm w-3/4 text-center">
+                    <a href="/" title="Distribuidor" className="hover:underline">{product?.vendor}</a>
+                  </span>
+                </li>
+              </ul>
+              {/* Variant Selectors */}
+              <div className="space-y-5">
+                {Object.entries(attributeGroups).map(([type, group]) => (
+                  <div key={type} className="space-y-2">
+                    <Label className="text-base">{type}:</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {group.values.map((value) => {
+                        const isSelected = selectedAttributes[type] === value
+                        const isAvailable = group.available[value]
+
+                        return (
+                          <Button
+                            key={value}
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              "h-9 px-4",
+                              isSelected && "border-pink-500 bg-pink-50 text-pink-500",
+                              !isAvailable && "opacity-50 cursor-not-allowed line-through",
+                            )}
+                            onClick={() => isAvailable && handleAttributeSelect(type, value)}
+                            disabled={!isAvailable}
+                          >
+                            {value}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-4">
+
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center border rounded-md">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-none"
+                      onClick={decrementQuantity}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <div className="w-12 text-center">{quantity}</div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-none"
+                      onClick={incrementQuantity}
+                      disabled={!selectedVariant || quantity >= selectedVariant.inventoryQuantity}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <Button
+                    className="flex-1 bg-zinc-900 hover:bg-zinc-800"
+                    onClick={handleAddToCart}
+                    disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
+                  >
+                    Añadir al Carrito
+                  </Button>
+                  <Button
+                    className="w-full bg-pink-500 hover:bg-pink-600"
+                    onClick={handleBuyNow}
+                    disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
+                  >
+                    Comprar ahora
+                  </Button>
+                </div>
+                {/* <Button
                   className="w-full bg-pink-500 hover:bg-pink-600"
                   onClick={handleBuyNow}
                   disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
                 >
                   Comprar ahora
-                </Button>
-              </div>
-              {/* <Button
-                className="w-full bg-pink-500 hover:bg-pink-600"
-                onClick={handleBuyNow}
-                disabled={!selectedVariant || selectedVariant.inventoryQuantity === 0}
-              >
-                Comprar ahora
-              </Button> */}
-
-            </div>
-            <div className="m-0 p-0">
-              <div className="flex items-center justify-center gap-6 py-2">
-                {/* <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <Ruler className="h-4 w-4 mr-2" />
-                  Guía De Tamaño
-                </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <Truck className="h-4 w-4 mr-2" />
-                  Envío
                 </Button> */}
-                <Button variant="ghost" size="default" 
-                  onClick={handleWhatsAppInquiry}
-                  className=" shadow">
-                  <Image
-                    src="/assets/whatsapp.svg"
-                    alt="Amazon"
-                    width={40}
-                    height={24}
-                    className="h-6 w-auto"
-                  />
-                  Pregunta Sobre Este Producto
-                </Button>
-                {/* <Button variant="ghost" size="sm" 
-                  className="text-muted-foreground bg-green-500 hover:bg-green-600 text-white " onClick={handleWhatsAppInquiry}>
-                  <WhatsApp className="h-4 w-4 mr-2" />
-                  Pregunta Sobre Este Producto
-                </Button> */}
+
               </div>
- 
+              <div className="m-0 p-0">
+                <div className="flex items-center justify-center gap-6 py-2">
+                  {/* <Button variant="ghost" size="sm" className="text-muted-foreground">
+                    <Ruler className="h-4 w-4 mr-2" />
+                    Guía De Tamaño
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground">
+                    <Truck className="h-4 w-4 mr-2" />
+                    Envío
+                  </Button> */}
+                  <Button variant="ghost" size="default" 
+                    onClick={handleWhatsAppInquiry}
+                    className=" shadow">
+                    <Image
+                      src="/assets/whatsapp.svg"
+                      alt="Amazon"
+                      width={40}
+                      height={24}
+                      className="h-6 w-auto"
+                    />
+                    Pregunta Sobre Este Producto
+                  </Button>
+                  {/* <Button variant="ghost" size="sm" 
+                    className="text-muted-foreground bg-green-500 hover:bg-green-600 text-white " onClick={handleWhatsAppInquiry}>
+                    <WhatsApp className="h-4 w-4 mr-2" />
+                    Pregunta Sobre Este Producto
+                  </Button> */}
+                </div>
+  
 
- 
+  
 
-              <div className="border-t pt-4">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Pago seguro garantizado:
-                </p>
-                <div className="flex gap-2">
-         
-                  <Image
-                    src="/assets/paypal.svg"
-                    alt="PayPal"
-                    width={40}
-                    height={24}
-                    className="h-6 w-auto"
-                  />
-                  <Image
-                    src="/assets/visa.svg"
-                    alt="Visa"
-                    width={40}
-                    height={24}
-                    className="h-6 w-auto"
-                  />
+                <div className="border-t pt-4">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Pago seguro garantizado:
+                  </p>
+                  <div className="flex gap-2">
+          
+                    <Image
+                      src="/assets/paypal.svg"
+                      alt="PayPal"
+                      width={40}
+                      height={24}
+                      className="h-6 w-auto"
+                    />
+                    <Image
+                      src="/assets/visa.svg"
+                      alt="Visa"
+                      width={40}
+                      height={24}
+                      className="h-6 w-auto"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
         
 

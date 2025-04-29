@@ -262,7 +262,7 @@ export default function ShopPage() {
         </div>
 
         {/* Filtros para móvil */}
-        <div className="md:hidden mb-4">
+        <div className="md:hidden mb-4 mt-4">
           <div className="flex items-center justify-between">
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
