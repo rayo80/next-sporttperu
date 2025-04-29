@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Grid, List, ChevronLeft, ChevronRight } from "lucide-react"
+import { Grid, List, ChevronLeft, ChevronRight, Filter, X } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -21,7 +21,8 @@ import { useProducts } from "@/contexts/product.context"
 import { SiteFooter } from "@/components/site-footer"
 import { useCategories } from "@/contexts/categories.context"
 import { useCollections } from "@/contexts/collections.context"
-
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 // Define the FilterOption type to match what's expected in FilterAccordion
 interface FilterOption {
   id: string
@@ -45,6 +46,8 @@ export default function ShopPage() {
   const { items: collections } = useCollections()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [currentPage, setCurrentPage] = useState(1)
+  const [filtersOpen, setFiltersOpen] = useState(false) ///
+  const [activeFiltersCount, setActiveFiltersCount] = useState(0) ////
   const [filters, setFilters] = useState({
     category: searchParams.get("category")?.split(",") || [],
     color: searchParams.get("color")?.split(",") || [],
@@ -52,6 +55,12 @@ export default function ShopPage() {
     collection: searchParams.get("collection")?.split(",") || [],
   })
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "featured")
+
+  // Calcular el número de filtros activos
+  useEffect(() => {
+    const count = Object.values(filters).reduce((acc, filterValues) => acc + filterValues.length, 0)
+    setActiveFiltersCount(count)
+  }, [filters])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -213,6 +222,17 @@ export default function ShopPage() {
     router.push(`/shop?${params.toString().replace(/%2C/g, ",")}`, { scroll: false })
   }
 
+  const clearAllFilters = () => {
+    const emptyFilters = {
+      category: [],
+      color: [],
+      size: [],
+      collection: [],
+    }
+    setFilters(emptyFilters)
+    updateURL(emptyFilters, sortBy)
+  }
+
   useEffect(() => {
     setCurrentPage(1)
   }, [filters, sortBy])
@@ -241,9 +261,103 @@ export default function ShopPage() {
           <h1 className="text-3xl font-bold text-center">Tienda</h1>
         </div>
 
+        {/* Filtros para móvil */}
+        <div className="md:hidden mb-4">
+          <div className="flex items-center justify-between">
+            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filtros
+                  {activeFiltersCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-pink-500 text-white">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[85%] sm:w-[350px] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="flex justify-between items-center">
+                    <span>Filtros</span>
+                    {activeFiltersCount > 0 && (
+                      <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-xs">
+                        Limpiar filtros
+                      </Button>
+                    )}
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="py-4 space-y-6">
+                  {(
+                    Object.entries(filterOptions) as [
+                      keyof typeof filters,
+                      (typeof filterOptions)[keyof typeof filters],
+                    ][]
+                  ).map(([key, options]) => (
+                    <FilterAccordion
+                      key={key}
+                      title={key.charAt(0).toUpperCase() + key.slice(1)}
+                      options={options}
+                      selectedOptions={filters[key]}
+                      onFilterChange={handleFilterChange(key)}
+                      compact={true}
+                    />
+                  ))}
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <Button className="w-full bg-pink-500 hover:bg-pink-600" onClick={() => setFiltersOpen(false)}>
+                    Ver {filteredProducts.length} productos
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <Select value={sortBy} onValueChange={handleSortChange}>
+              <SelectTrigger className="w-[140px] h-9 text-xs">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value} className="text-sm">
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Chips de filtros activos */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3 overflow-x-auto pb-2">
+              {Object.entries(filters).map(([key, values]) =>
+                values.map((value) => {
+                  const option = filterOptions[key as keyof typeof filters].find((opt) => opt.id === value)
+                  return option ? (
+                    <div
+                      key={`${key}-${value}`}
+                      className="flex items-center gap-1 bg-gray-100 rounded-full px-3 py-1 text-xs"
+                    >
+                      <span>{option.label}</span>
+                      <button
+                        onClick={() => {
+                          const newValues = filters[key as keyof typeof filters].filter((v) => v !== value)
+                          handleFilterChange(key as keyof typeof filters)(newValues)
+                        }}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : null
+                }),
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="content-section grid md:grid-cols-[240px_1fr] gap-8">
           {/* Filters */}
-          <div className="space-y-6">
+          <div className="hidden md:block space-y-6">
             {(
               Object.entries(filterOptions) as [keyof typeof filters, FilterOption[]][]
             ).map(([key, options]) => (
@@ -255,11 +369,17 @@ export default function ShopPage() {
                     onFilterChange={handleFilterChange(key)}
                 />
             ))}
+
+            {activeFiltersCount > 0 && (
+              <Button variant="outline" size="sm" onClick={clearAllFilters} className="w-full">
+                Limpiar filtros
+              </Button>
+            )}
           </div>
 
           {/* Products */}
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="hidden md:flex flex-col md:flex-row items-center justify-between gap-4">
               {/* Ordenar por */}
               <div className="flex items-center space-x-2 w-full md:w-auto">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Ordenar por:</span>
@@ -304,6 +424,11 @@ export default function ShopPage() {
               </div>
             </div>
 
+            {/* Contador de resultados para móvil */}
+            <div className="md:hidden text-sm text-muted-foreground text-center">
+              {sortedProducts.length} productos encontrados
+            </div>
+
             {/* Product List */}
             <div
               className={`grid gap-2 md:gap-6 ${
@@ -332,11 +457,15 @@ export default function ShopPage() {
                   key={page}
                   variant={currentPage === page ? "default" : "outline"}
                   onClick={() => setCurrentPage(page)}
-                  className={currentPage === page ? "bg-pink-500" : ""}
+                  className={cn(currentPage === page ? "bg-pink-500" : "", "h-9 w-9 p-0 hidden sm:inline-flex")}
                 >
                   {page}
                 </Button>
               ))}
+              {/* Mostrar solo página actual en móvil */}
+              <span className="flex items-center justify-center sm:hidden">
+                {currentPage} de {totalPages}
+              </span>
               <Button
                 variant="outline"
                 size="icon"

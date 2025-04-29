@@ -17,9 +17,10 @@ interface FilterAccordionProps {
   selectedOptions: string[]
   onFilterChange: (selectedOptions: string[]) => void
   className?: string
+  compact?: boolean
 }
 
-export function FilterAccordion({ title, options, selectedOptions, onFilterChange, className }: FilterAccordionProps) {
+export function FilterAccordion({ title, options, selectedOptions, onFilterChange, className, compact }: FilterAccordionProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   // Función para traducir títulos comunes de inglés a español
@@ -67,7 +68,7 @@ export function FilterAccordion({ title, options, selectedOptions, onFilterChang
       <Accordion type="single" collapsible className="w-full" onValueChange={(value) => setIsOpen(!!value)}>
         <AccordionItem value="item-1" className="border-none px-1">
           <div className="flex items-center justify-between px-3">
-            <AccordionTrigger className="text-lg font-medium hover:no-underline py-4 flex-1">
+            <AccordionTrigger className={cn("text-lg font-medium hover:no-underline", compact && "text-base py-2")}>
               <div className="flex items-center gap-2">
                 {translatedTitle}
                 {selectedOptions.length > 0 && (
@@ -90,7 +91,7 @@ export function FilterAccordion({ title, options, selectedOptions, onFilterChang
             )}
           </div>
           <AccordionContent className="pt-1 pb-3">
-            <div className="space-y-1 px-1">
+            <div className={cn("space-y-2", compact && "grid grid-cols-2 gap-2 space-y-0")}>
               {options.map((option) => (
                 <div
                   key={option.id}
