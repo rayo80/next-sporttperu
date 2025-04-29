@@ -31,6 +31,11 @@ export function ProductSlider({
   const sliderRef = useRef<HTMLDivElement>(null)
   const [productsPerView, setProductsPerView] = useState(breakpoints.sm || 1)
 
+  // Añade estas variables para rastrear el inicio del toque y la dirección
+  const [touchStartX, setTouchStartX] = useState(0)
+  const [touchStartY, setTouchStartY] = useState(0)
+  const [isHorizontalSwipe, setIsHorizontalSwipe] = useState(false)
+
   const nextSlide = () => {
     setCurrentIndex((prev) => 
       prev + 1 >= products.length - productsPerView + 1 ? 0 : prev + 1
@@ -51,6 +56,8 @@ export function ProductSlider({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true)
+    setTouchStartX(e.touches[0].pageX)
+    setTouchStartY(e.touches[0].pageY)
     setStartX(e.touches[0].pageX - (sliderRef.current?.offsetLeft || 0))
     setScrollLeft(currentIndex * ((sliderRef.current?.offsetWidth || 0) / productsPerView))
   }
@@ -67,13 +74,40 @@ export function ProductSlider({
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return
-    const x = e.touches[0].pageX - (sliderRef.current?.offsetLeft || 0)
-    const walk = (x - startX) * 2
-    const newIndex = Math.round((scrollLeft - walk) / ((sliderRef.current?.offsetWidth || 0) / productsPerView))
-    if (newIndex >= 0 && newIndex <= products.length - productsPerView) {
-      setCurrentIndex(newIndex)
+
+    const touchX = e.touches[0].pageX
+    const touchY = e.touches[0].pageY
+
+    // Calcular la distancia recorrida en ambas direcciones
+    const deltaX = Math.abs(touchX - touchStartX)
+    const deltaY = Math.abs(touchY - touchStartY)
+
+    // Si aún no hemos determinado la dirección principal del deslizamiento
+    if (!isHorizontalSwipe && (deltaX > 10 || deltaY > 10)) {
+      // Si el movimiento horizontal es mayor que el vertical, es un deslizamiento horizontal
+      setIsHorizontalSwipe(deltaX > deltaY)
+
+      // Si es un deslizamiento vertical, detener la captura de este evento
+      if (deltaY > deltaX) {
+        setIsDragging(false)
+        return
+      }
     }
+
+    if (isHorizontalSwipe) {
+      if (!isDragging) return
+      const x = e.touches[0].pageX - (sliderRef.current?.offsetLeft || 0)
+      const walk = (x - startX) * 2
+      const newIndex = Math.round((scrollLeft - walk) / ((sliderRef.current?.offsetWidth || 0) / productsPerView))
+      if (newIndex >= 0 && newIndex <= products.length - productsPerView) {
+        setCurrentIndex(newIndex)
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    setIsHorizontalSwipe(false)
   }
 
   const handleMouseUp = () => {
@@ -186,6 +220,7 @@ export function ProductSlider({
         onMouseLeave={handleMouseLeave}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <motion.div 
           className="flex"

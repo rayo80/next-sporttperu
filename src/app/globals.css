@@ -151,6 +151,22 @@ body {
   overflow-y: overlay;
 }
 
+/* Permitir scroll vertical en elementos con scroll horizontal */
+.touch-pan-x {
+  touch-action: pan-x pan-y;
+}
+
+/* Asegurar que los elementos con overflow no interfieran con el scroll principal */
+[data-slider] {
+  touch-action: pan-x;
+}
+
+/* Evitar que los elementos con overflow capturen todos los eventos táctiles */
+[data-slider] * {
+  touch-action: inherit;
+}
+
+
 /* Fallback para navegadores que no soportan overlay */
 @supports not (overflow: overlay) {
   html,
