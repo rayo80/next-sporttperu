@@ -19,6 +19,7 @@ import { useCategories } from "@/contexts/categories.context"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth.context"
 import { CurrencySelector } from "./currency-selector"
+import { SearchDialog } from "./search-dialog"
 
 export function SiteHeader() {
   const { items: shopCategories } = useCategories()
@@ -56,20 +57,22 @@ export function SiteHeader() {
 
           {/* Buscador desktop (oculto en móvil) */}
           <div className="flex-1 max-w-2xl mx-4 hidden md:block">
-            <div className="flex w-full">
+          <form action="/search" className="flex w-full">
               <Input
+                name="q"
                 placeholder="Buscar en nuestra tienda"
                 className="flex-1 rounded-r-none bg-white text-black"
+                required
               />
-              <Button className="rounded-l-none bg-pink-500 hover:bg-pink-600">
+              <Button type="submit" className="rounded-l-none bg-pink-500 hover:bg-pink-600">
                 Buscar
               </Button>
-            </div>
+            </form>
           </div>
 
           {/* Íconos y menú */}
           <div className="flex items-center gap-4">
-                  <CurrencySelector />
+            <CurrencySelector />
             
             <div className="relative">
               <Button 
@@ -205,15 +208,17 @@ export function SiteHeader() {
           <div className="flex flex-col items-center justify-center h-full px-4">
             {/* Buscador en el menú móvil con ícono de lupa */}
             <div className="w-full max-w-md mb-6 flex justify-center">
-              <div className="flex items-center w-[300px] gap-2 justify-center">
+              <form action="/search" className="flex w-full">
                 <Input
+                  name="q"
                   placeholder="Buscar en nuestra tienda"
-                  className="flex-1 rounded-l-md bg-white text-black "
+                  className="flex-1 rounded-r-none bg-white text-black"
+                  required
                 />
-                <Button className="rounded-r-md bg-pink-500 hover:bg-pink-600">
-                  <Search className="h-5 w-5" />
+                <Button type="submit" className="rounded-l-none bg-pink-500 hover:bg-pink-600">
+                  Buscar
                 </Button>
-              </div>
+              </form>
             </div>
             {/* Enlaces de navegación */}
             <nav className="flex flex-col items-center space-y-6">

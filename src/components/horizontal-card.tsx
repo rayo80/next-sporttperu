@@ -46,7 +46,7 @@ export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
     <Card className="group h-52 overflow-hidden border border-gray-100 bg-gradient-to-b from-white to-gray-50 shadow-sm transition-all hover:shadow-md">
       <div className="flex h-full flex-row">
         <div className="relative h-full w-40">
-          <Link href={`/productos/${slug}`}>
+          <Link href={`/product/${slug}`}>
             <div className="relative h-full w-full overflow-hidden">
               <Image
                 src={validUrl}
@@ -61,7 +61,7 @@ export function HorizontalProductCard({ product }: HorizontalProductCardProps) {
         
         <div className="flex flex-1 flex-col justify-between p-4">
           <CardContent className="p-0">
-            <Link href={`/productos/${slug}`} className="no-underline">
+            <Link href={`/product/${slug}`} className="no-underline">
               <h3 className="mb-2 text-sm font-medium text-gray-800 transition-colors hover:text-gray-600">{title}</h3>
             </Link>
             

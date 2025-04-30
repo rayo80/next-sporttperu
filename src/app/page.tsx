@@ -178,6 +178,7 @@ export default function Home() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
+          className="container-section"
           variants={fadeInUp}
         >
           <SportsClothingSection />
